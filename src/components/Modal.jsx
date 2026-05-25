@@ -31,10 +31,14 @@ export default function Modal({ tile, onSave, onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [name, url, cat, icon, color, logo])
 
-  const handleSave = () => {
-    if (!name.trim()) return
-    onSave({ name: name.trim(), url: url.trim() || '#', cat: cat.trim(), icon, color, logo })
+ const handleSave = () => {
+  if (!name.trim()) return
+  let finalUrl = url.trim() || '#'
+  if (finalUrl !== '#' && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+    finalUrl = 'https://' + finalUrl
   }
+  onSave({ name: name.trim(), url: finalUrl, cat: cat.trim(), icon, color, logo })
+}
 
   const handleFile = (file) => {
     if (!file || !file.type.startsWith('image/')) return
