@@ -12,6 +12,23 @@ import Weather from './components/Weather'
 var EMOJIS_FOLDER = ['📁','📂','⭐','🔴','🟠','🟡','🟢','🔵','🟣','🏠','💼','🎯','🔧','📊','🎙️','🌱','🚀','💎','🎬','🌍']
 var COLORS_F = ['#CC0000','#1a6fc4','#1a8f5c','#9b3ccf','#d97316','#0891b2','#374151','#b45309']
 
+function useClock() {
+  var state = useState({ fr: '', cn: '' })
+  var clock = state[0]; var setClock = state[1]
+  useEffect(function() {
+    function tick() {
+      var n = new Date()
+      var fr = n.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      var cn = n.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Shanghai' })
+      var date = n.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })
+      setClock({ fr: fr, cn: cn, date: date })
+    }
+    tick(); var id = setInterval(tick, 10000)
+    return function() { clearInterval(id) }
+  }, [])
+  return clock
+}
+
 export default function App() {
   var tilesState = useState([]); var tiles = tilesState[0]; var setTiles = tilesState[1]
   var loadingState = useState(true); var loading = loadingState[0]; var setLoading = loadingState[1]
@@ -20,7 +37,6 @@ export default function App() {
   var searchState = useState(''); var search = searchState[0]; var setSearch = searchState[1]
   var modalOpenState = useState(false); var modalOpen = modalOpenState[0]; var setModalOpen = modalOpenState[1]
   var editingTileState = useState(null); var editingTile = editingTileState[0]; var setEditingTile = editingTileState[1]
-  var clockState = useState(''); var clock = clockState[0]; var setClock = clockState[1]
   var pageState = useState('home'); var page = pageState[0]; var setPage = pageState[1]
   var folderState = useState(null); var openFolder = folderState[0]; var setOpenFolder = folderState[1]
   var draggingState = useState(null); var dragging = draggingState[0]; var setDragging = draggingState[1]
@@ -29,14 +45,7 @@ export default function App() {
   var folderFormState = useState({ name: '', icon: '📁', color: '#CC0000' })
   var folderForm = folderFormState[0]; var setFolderForm = folderFormState[1]
 
-  useEffect(function() {
-    function tick() {
-      var n = new Date()
-      setClock(n.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' }) + ' · ' + n.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }))
-    }
-    tick(); var id = setInterval(tick, 10000)
-    return function() { clearInterval(id) }
-  }, [])
+  var clock = useClock()
 
   var fetchTiles = useCallback(function() {
     setLoading(true)
@@ -103,32 +112,28 @@ export default function App() {
         if (updated) setTiles(function(prev) { return prev.map(function(t) { return t.id === draggedTile.id ? updated : t }) })
       })
     } else {
-      var draggedPos = draggedTile.position || 0
-      var targetPos = targetTile.position || 0
-      var updatedList = tiles.map(function(t) {
-        if (t.id === dragging) return Object.assign({}, t, { position: targetPos })
-        if (t.id === targetId) return Object.assign({}, t, { position: draggedPos })
+      var dPos = draggedTile.position || 0; var tPos = targetTile.position || 0
+      setTiles(tiles.map(function(t) {
+        if (t.id === dragging) return Object.assign({}, t, { position: tPos })
+        if (t.id === targetId) return Object.assign({}, t, { position: dPos })
         return t
-      })
-      setTiles(updatedList)
-      updateTile(dragging, { position: targetPos }, tiles)
-      updateTile(targetId, { position: draggedPos }, tiles)
+      }))
+      updateTile(dragging, { position: tPos }, tiles)
+      updateTile(targetId, { position: dPos }, tiles)
     }
     setDragging(null); setDragOver(null)
   }
 
   function handleFolderReorder(dragId, targetId) {
-    var draggedTile = tiles.find(function(t) { return t.id === dragId })
-    var targetTile = tiles.find(function(t) { return t.id === targetId })
-    if (!draggedTile || !targetTile) return
-    var dPos = draggedTile.position || 0
-    var tPos = targetTile.position || 0
-    var updated = tiles.map(function(t) {
+    var dt = tiles.find(function(t) { return t.id === dragId })
+    var tt = tiles.find(function(t) { return t.id === targetId })
+    if (!dt || !tt) return
+    var dPos = dt.position || 0; var tPos = tt.position || 0
+    setTiles(tiles.map(function(t) {
       if (t.id === dragId) return Object.assign({}, t, { position: tPos })
       if (t.id === targetId) return Object.assign({}, t, { position: dPos })
       return t
-    })
-    setTiles(updated)
+    }))
     updateTile(dragId, { position: tPos }, tiles)
     updateTile(targetId, { position: dPos }, tiles)
   }
@@ -184,22 +189,44 @@ export default function App() {
   }
 
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#080808' } },
-    React.createElement('header', { style: { background: '#0a0a0a', borderBottom: '1px solid #1c1c1c', padding: '18px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-      React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
-        React.createElement('h1', { style: { fontSize: 22, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'flex', alignItems: 'center' } },
+
+    // HEADER
+    React.createElement('header', { style: { background: '#0a0a0a', borderBottom: '1px solid #1c1c1c', padding: '20px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 } },
+
+      // LEFT — titre centré
+      React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 } },
+        React.createElement('h1', { style: { fontSize: 24, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', display: 'flex', alignItems: 'center' } },
           React.createElement('span', { style: { color: '#fff' } }, 'GROUPE\u00a0'),
           React.createElement('span', { style: { color: '#CC0000' } }, 'LINEAR')
         ),
-        React.createElement('p', { style: { fontSize: 13, color: '#888', letterSpacing: '0.03em' } }, greet + ', let\'s go !')
+        React.createElement('p', { style: { fontSize: 12, color: '#666', letterSpacing: '0.03em' } }, greet + ', let\'s go !')
       ),
-      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 20 } },
+
+      // RIGHT — météo + horloges
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 } },
         React.createElement(Weather, null),
-        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 } },
-          React.createElement('span', { style: { fontSize: 13, color: '#666', letterSpacing: '0.06em' } }, clock),
-          !hasSupabase ? React.createElement('span', { style: { fontSize: 9, color: '#333', textTransform: 'uppercase' } }, 'local') : null
+
+        // Horloges
+        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 } },
+          // Date
+          React.createElement('div', { style: { fontSize: 10, color: '#444', letterSpacing: '0.05em', textTransform: 'capitalize' } }, clock.date || ''),
+          // FR + CN
+          React.createElement('div', { style: { display: 'flex', gap: 12, alignItems: 'center' } },
+            React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
+              React.createElement('span', { style: { fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '0.04em', fontVariantNumeric: 'tabular-nums' } }, clock.fr || ''),
+              React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'France')
+            ),
+            React.createElement('div', { style: { width: 1, height: 28, background: '#222' } }),
+            React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
+              React.createElement('span', { style: { fontSize: 22, fontWeight: 700, color: '#cc4400', letterSpacing: '0.04em', fontVariantNumeric: 'tabular-nums' } }, clock.cn || ''),
+              React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'Canton')
+            ),
+            !hasSupabase ? React.createElement('span', { style: { fontSize: 9, color: '#333', textTransform: 'uppercase', marginLeft: 4 } }, 'local') : null
+          )
         )
       )
     ),
+
     React.createElement(Toolbar, {
       cats: catSet, filterCat: filterCat, setFilterCat: setFilterCat,
       search: search, setSearch: setSearch,
