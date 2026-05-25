@@ -11,7 +11,18 @@ import Weather from './components/Weather'
 import CantonWeatherTooltip from './components/CantonWeatherTooltip'
 
 var EMOJIS_FOLDER = ['📁','📂','⭐','🔴','🟠','🟡','🟢','🔵','🟣','🏠','💼','🎯','🔧','📊','🎙️','🌱','🚀','💎','🎬','🌍']
-var COLORS_F = ['#CC0000','#1a6fc4','#1a8f5c','#9b3ccf','#d97316','#0891b2','#374151','#b45309']
+var COLORS_F = ['#CC0000','#1a6fc4','#1a8f5c','#9b3ccf','#d97616','#0891b2','#374151','#b45309']
+
+var DEFAULT_QUICK_LINKS = [
+  { name: 'Gmail', url: 'https://mail.google.com', icon: '📧' },
+  { name: 'Outlook', url: 'https://outlook.cloud.microsoft/', icon: '📨' },
+]
+
+var QL_KEY = 'startpage_quicklinks_v1'
+function loadQL() {
+  try { var r = localStorage.getItem(QL_KEY); return r ? JSON.parse(r) : DEFAULT_QUICK_LINKS } catch(e) { return DEFAULT_QUICK_LINKS }
+}
+function saveQL(ql) { try { localStorage.setItem(QL_KEY, JSON.stringify(ql)) } catch(e) {} }
 
 function useClock() {
   var state = useState({ fr: '', cn: '', date: '' })
@@ -37,6 +48,7 @@ export default function App() {
   var editModeState = useState(false); var editMode = editModeState[0]; var setEditMode = editModeState[1]
   var filterCatState = useState('all'); var filterCat = filterCatState[0]; var setFilterCat = filterCatState[1]
   var searchState = useState(''); var search = searchState[0]; var setSearch = searchState[1]
+  var googleSearchState = useState(''); var googleSearch = googleSearchState[0]; var setGoogleSearch = googleSearchState[1]
   var modalOpenState = useState(false); var modalOpen = modalOpenState[0]; var setModalOpen = modalOpenState[1]
   var editingTileState = useState(null); var editingTile = editingTileState[0]; var setEditingTile = editingTileState[1]
   var pageState = useState('home'); var page = pageState[0]; var setPage = pageState[1]
@@ -47,6 +59,10 @@ export default function App() {
   var folderFormState = useState({ name: '', icon: '📁', color: '#CC0000' })
   var folderForm = folderFormState[0]; var setFolderForm = folderFormState[1]
   var cantonHoverState = useState(false); var cantonHover = cantonHoverState[0]; var setCantonHover = cantonHoverState[1]
+  var frHoverState = useState(false); var frHover = frHoverState[0]; var setFrHover = frHoverState[1]
+  var qlState = useState(loadQL()); var quickLinks = qlState[0]; var setQuickLinks = qlState[1]
+  var qlModalState = useState(false); var qlModalOpen = qlModalState[0]; var setQlModalOpen = qlModalState[1]
+  var qlFormState = useState(loadQL()); var qlForm = qlFormState[0]; var setQlForm = qlFormState[1]
 
   var clock = useClock()
 
@@ -147,6 +163,11 @@ export default function App() {
       setFolderForm({ name: '', icon: '📁', color: '#CC0000' })
     })
   }
+  function saveQlModal() {
+    saveQL(qlForm)
+    setQuickLinks(qlForm)
+    setQlModalOpen(false)
+  }
 
   var catSet = ['all']
   tiles.forEach(function(t) { if (t.cat && catSet.indexOf(t.cat) === -1) catSet.push(t.cat) })
@@ -161,7 +182,7 @@ export default function App() {
   var hour = new Date().getHours()
   var greet = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon apres-midi' : 'Bonsoir'
   var inputStyle = { width: '100%', background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '9px 12px', color: '#e0e0e0', fontSize: 13, fontFamily: 'inherit', outline: 'none' }
-  var labelStyle = { display: 'block', fontSize: 10, fontWeight: 700, color: '#444', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }
+  var labelStyle = { display: 'block', fontSize: 10, fontWeight: 700, color: '#555', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }
 
   if (page === 'tools') return React.createElement(ToolsPage, { onBack: function() { setPage('home') } })
   if (openFolder) {
@@ -180,45 +201,90 @@ export default function App() {
   }
 
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#080808' } },
-    React.createElement('header', { style: { background: '#0a0a0a', borderBottom: '1px solid #1c1c1c', padding: '20px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 } },
-      React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 } },
-        React.createElement('h1', { style: { fontSize: 24, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', display: 'flex', alignItems: 'center' } },
-          React.createElement('span', { style: { color: '#fff' } }, 'GROUPE\u00a0'),
-          React.createElement('span', { style: { color: '#CC0000' } }, 'LINEAR')
-        ),
-        React.createElement('p', { style: { fontSize: 12, color: '#666', letterSpacing: '0.03em' } }, greet + ', let\'s go !')
-      ),
-      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 } },
-        React.createElement(Weather, null),
-        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 } },
-          React.createElement('div', { style: { fontSize: 10, color: '#444', letterSpacing: '0.05em', textTransform: 'capitalize' } }, clock.date || ''),
-          React.createElement('div', { style: { display: 'flex', gap: 12, alignItems: 'center' } },
-            React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
-              React.createElement('span', { style: { fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '0.04em', fontVariantNumeric: 'tabular-nums' } }, clock.fr || ''),
-              React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'France')
-            ),
-            React.createElement('div', { style: { width: 1, height: 28, background: '#222' } }),
-            React.createElement('div', {
-              style: { display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', cursor: 'pointer' },
-              onMouseEnter: function() { setCantonHover(true) },
-              onMouseLeave: function() { setCantonHover(false) },
+
+    React.createElement('header', { style: { background: '#0a0a0a', borderBottom: '1px solid #1c1c1c', padding: '0 20px' } },
+
+      // ROW 1 : quick links | titre centré | éditer
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', padding: '10px 0', gap: 12 } },
+
+        // QUICK LINKS gauche
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' } },
+          quickLinks.map(function(ql) {
+            return React.createElement('a', {
+              key: ql.name, href: ql.url, target: '_blank', rel: 'noopener noreferrer',
+              style: { display: 'flex', alignItems: 'center', gap: 6, background: '#141414', border: '1px solid #222', borderRadius: 8, padding: '6px 12px', textDecoration: 'none', color: '#ccc', fontSize: 12, fontWeight: 600 }
             },
-              React.createElement('span', { style: { fontSize: 22, fontWeight: 700, color: '#cc4400', letterSpacing: '0.04em', fontVariantNumeric: 'tabular-nums' } }, clock.cn || ''),
-              React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'Canton'),
-              cantonHover ? React.createElement(CantonWeatherTooltip, null) : null
-            ),
-            !hasSupabase ? React.createElement('span', { style: { fontSize: 9, color: '#333', textTransform: 'uppercase', marginLeft: 4 } }, 'local') : null
-          )
-        )
+              React.createElement('span', { style: { fontSize: 16 } }, ql.icon || '🔗'),
+              React.createElement('span', null, ql.name)
+            )
+          }),
+          editMode ? React.createElement('button', {
+            onClick: function() { setQlForm(quickLinks.slice()); setQlModalOpen(true) },
+            style: { background: 'transparent', border: '1px dashed #333', borderRadius: 8, padding: '6px 10px', color: '#555', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }
+          }, '✏️ Liens') : null
+        ),
+
+        // TITRE centré
+        React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' } },
+          React.createElement('h1', { style: { fontSize: 22, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', display: 'flex', alignItems: 'center' } },
+            React.createElement('span', { style: { color: '#fff' } }, 'GROUPE\u00a0'),
+            React.createElement('span', { style: { color: '#CC0000' } }, 'LINEAR')
+          ),
+          React.createElement('p', { style: { fontSize: 12, color: '#666' } }, greet + ', let\'s go !')
+        ),
+
+        // ÉDITER droite
+        React.createElement('button', {
+          onClick: function() { setEditMode(function(v) { return !v }) },
+          style: { flexShrink: 0, padding: '7px 18px', background: editMode ? '#1a0000' : 'transparent', border: editMode ? '1px solid #CC0000' : '1px solid #2a2a2a', borderRadius: 8, color: editMode ? '#CC0000' : '#888', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'inherit' }
+        }, editMode ? 'Terminer' : 'Editer')
+      ),
+
+      // ROW 2 : météo + date + horloges centrés
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '8px 0 12px', flexWrap: 'wrap' } },
+
+        React.createElement(Weather, null),
+        React.createElement('div', { style: { width: 1, height: 28, background: '#1c1c1c' } }),
+        React.createElement('div', { style: { fontSize: 11, color: '#555', textTransform: 'capitalize' } }, clock.date || ''),
+        React.createElement('div', { style: { width: 1, height: 28, background: '#1c1c1c' } }),
+
+        // FR — survol = météo 7j
+        React.createElement('div', {
+          style: { display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', cursor: 'default' },
+          onMouseEnter: function() { setFrHover(true) },
+          onMouseLeave: function() { setFrHover(false) },
+        },
+          React.createElement('span', { style: { fontSize: 24, fontWeight: 700, color: '#fff', fontVariantNumeric: 'tabular-nums' } }, clock.fr || ''),
+          React.createElement('span', { style: { fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'France'),
+          frHover ? React.createElement(Weather, { forceOpen: true }) : null
+        ),
+
+        React.createElement('div', { style: { width: 1, height: 28, background: '#1c1c1c' } }),
+
+        // CN — survol = météo Canton
+        React.createElement('div', {
+          style: { display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', cursor: 'default' },
+          onMouseEnter: function() { setCantonHover(true) },
+          onMouseLeave: function() { setCantonHover(false) },
+        },
+          React.createElement('span', { style: { fontSize: 24, fontWeight: 700, color: '#cc4400', fontVariantNumeric: 'tabular-nums' } }, clock.cn || ''),
+          React.createElement('span', { style: { fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'Canton'),
+          cantonHover ? React.createElement(CantonWeatherTooltip, null) : null
+        ),
+
+        !hasSupabase ? React.createElement('span', { style: { fontSize: 9, color: '#333', textTransform: 'uppercase' } }, 'local') : null
       )
     ),
+
     React.createElement(Toolbar, {
       cats: catSet, filterCat: filterCat, setFilterCat: setFilterCat,
       search: search, setSearch: setSearch,
+      googleSearch: googleSearch, setGoogleSearch: setGoogleSearch,
       editMode: editMode, setEditMode: setEditMode,
       onEditCat: handleEditCat, onDeleteCat: handleDeleteCat,
     }),
-    React.createElement('main', { style: { flex: 1, padding: 28 } },
+
+    React.createElement('main', { style: { flex: 1, padding: '20px 16px' } },
       loading
         ? React.createElement('div', { style: { textAlign: 'center', paddingTop: 80, color: '#444', fontSize: 13 } }, 'Chargement...')
         : React.createElement(Grid, {
@@ -236,7 +302,36 @@ export default function App() {
             onDrop: handleDrop, onDragEnd: handleDragEnd,
           })
     ),
+
     modalOpen ? React.createElement(Modal, { tile: editingTile, onSave: editingTile ? handleUpdate : handleAdd, onClose: function() { setModalOpen(false) } }) : null,
+
+    // MODAL QUICK LINKS
+    qlModalOpen ? React.createElement('div', {
+      onClick: function(e) { if (e.target === e.currentTarget) setQlModalOpen(false) },
+      style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }
+    },
+      React.createElement('div', { style: { background: '#111', border: '1px solid #252525', borderRadius: 16, padding: 24, width: 400, maxWidth: '95vw' } },
+        React.createElement('h2', { style: { fontSize: 13, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 18 } }, 'Liens rapides'),
+        qlForm.map(function(ql, i) {
+          return React.createElement('div', { key: i, style: { display: 'flex', gap: 8, marginBottom: 10 } },
+            React.createElement('input', { value: ql.icon || '', onChange: function(e) { var f = qlForm.slice(); f[i] = Object.assign({}, f[i], { icon: e.target.value }); setQlForm(f) }, placeholder: '🔗', style: { width: 44, background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 6, padding: '8px 6px', color: '#ddd', fontSize: 18, fontFamily: 'inherit', outline: 'none', textAlign: 'center' } }),
+            React.createElement('input', { value: ql.name, onChange: function(e) { var f = qlForm.slice(); f[i] = Object.assign({}, f[i], { name: e.target.value }); setQlForm(f) }, placeholder: 'Nom', style: { flex: 1, background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 6, padding: '8px 10px', color: '#ddd', fontSize: 12, fontFamily: 'inherit', outline: 'none' } }),
+            React.createElement('input', { value: ql.url, onChange: function(e) { var f = qlForm.slice(); f[i] = Object.assign({}, f[i], { url: e.target.value }); setQlForm(f) }, placeholder: 'https://...', style: { flex: 2, background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 6, padding: '8px 10px', color: '#ddd', fontSize: 12, fontFamily: 'inherit', outline: 'none' } }),
+            React.createElement('button', { onClick: function() { setQlForm(qlForm.filter(function(_, j) { return j !== i })) }, style: { background: '#CC0000', border: 'none', borderRadius: 6, color: '#fff', fontSize: 13, cursor: 'pointer', padding: '0 10px', fontWeight: 700 } }, 'x')
+          )
+        }),
+        React.createElement('button', {
+          onClick: function() { setQlForm(qlForm.concat([{ name: '', url: '', icon: '🔗' }])) },
+          style: { width: '100%', padding: 9, background: 'transparent', border: '1px dashed #333', borderRadius: 8, color: '#666', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16 }
+        }, '+ Ajouter'),
+        React.createElement('div', { style: { display: 'flex', gap: 10 } },
+          React.createElement('button', { onClick: function() { setQlModalOpen(false) }, style: { flex: 1, padding: 10, background: 'transparent', border: '1px solid #252525', borderRadius: 8, color: '#555', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' } }, 'Annuler'),
+          React.createElement('button', { onClick: saveQlModal, style: { flex: 2, padding: 10, background: '#CC0000', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' } }, 'Enregistrer')
+        )
+      )
+    ) : null,
+
+    // MODAL DOSSIER
     folderModalOpen ? React.createElement('div', {
       onClick: function(e) { if (e.target === e.currentTarget) setFolderModalOpen(false) },
       style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }
