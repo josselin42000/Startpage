@@ -1,26 +1,53 @@
 import React from 'react'
 import Tile from './Tile'
 
-export default function Grid({ tiles, editMode, onAdd, onEdit, onDelete, onLongPressActivate, filterCat }) {
-  return (
-    <>
-      <div style={{ fontSize: 10, fontWeight: 700, color: '#333', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }}>
-        {filterCat === 'all' ? `${tiles.length} liens` : `${filterCat} · ${tiles.length} lien${tiles.length > 1 ? 's' : ''}`}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 14 }}>
-        {tiles.map((t, i) => (
-          <Tile key={t.id} tile={t} editMode={editMode} onEdit={onEdit} onDelete={onDelete} onLongPressActivate={onLongPressActivate} index={i} />
-        ))}
-        <div
-          onClick={onAdd}
-          style={{ background: '#111', border: '1px dashed #2a2a2a', borderRadius: 14, padding: '22px 14px 16px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 11, transition: 'all .18s', color: '#444' }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = '#CC0000'; e.currentTarget.style.color = '#CC0000'; e.currentTarget.style.background = '#0b0000' }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a2a2a'; e.currentTarget.style.color = '#444'; e.currentTarget.style.background = '#111' }}
-        >
-          <div style={{ width: 58, height: 58, borderRadius: 14, background: '#161616', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: 'inherit' }}>+</div>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'inherit' }}>Ajouter</div>
-        </div>
-      </div>
-    </>
+export default function Grid(props) {
+  var tiles = props.tiles
+  var editMode = props.editMode
+  var onAdd = props.onAdd
+  var onEdit = props.onEdit
+  var onDelete = props.onDelete
+  var onLongPressActivate = props.onLongPressActivate
+  var onOpenTools = props.onOpenTools
+  var filterCat = props.filterCat
+
+  var label = filterCat === 'all'
+    ? (tiles.length + ' liens')
+    : (filterCat + ' · ' + tiles.length + ' lien' + (tiles.length > 1 ? 's' : ''))
+
+  var tileElements = tiles.map(function(t, i) {
+    return React.createElement(Tile, { key: t.id, tile: t, editMode: editMode, onEdit: onEdit, onDelete: onDelete, onLongPressActivate: onLongPressActivate, index: i })
+  })
+
+  var toolsBtn = React.createElement('div', {
+    key: 'tools',
+    onClick: onOpenTools,
+    style: { background: '#1a1a1a', border: '1px solid #CC000033', borderRadius: 14, padding: '22px 14px 16px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 11 },
+    onMouseEnter: function(e) { e.currentTarget.style.background = '#200000'; e.currentTarget.style.borderColor = '#CC000066' },
+    onMouseLeave: function(e) { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.borderColor = '#CC000033' },
+  },
+    React.createElement('div', { style: { width: 58, height: 58, borderRadius: 14, background: '#CC000018', border: '1px solid #CC000044', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 } }, '🛠️'),
+    React.createElement('div', { style: { fontSize: 12, fontWeight: 600, color: '#ddd' } }, 'Outils'),
+    React.createElement('div', { style: { fontSize: 9, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '2px 8px', border: '1px solid #2a2a2a', borderRadius: 20 } }, 'Apps')
+  )
+
+  var addBtn = React.createElement('div', {
+    key: 'add',
+    onClick: onAdd,
+    style: { background: '#111', border: '1px dashed #2a2a2a', borderRadius: 14, padding: '22px 14px 16px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 11, color: '#444' },
+    onMouseEnter: function(e) { e.currentTarget.style.borderColor = '#CC0000'; e.currentTarget.style.color = '#CC0000'; e.currentTarget.style.background = '#0b0000' },
+    onMouseLeave: function(e) { e.currentTarget.style.borderColor = '#2a2a2a'; e.currentTarget.style.color = '#444'; e.currentTarget.style.background = '#111' },
+  },
+    React.createElement('div', { style: { width: 58, height: 58, borderRadius: 14, background: '#161616', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: 'inherit' } }, '+'),
+    React.createElement('div', { style: { fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'inherit' } }, 'Ajouter')
+  )
+
+  return React.createElement('div', null,
+    React.createElement('div', { style: { fontSize: 10, fontWeight: 700, color: '#333', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 } }, label),
+    React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 14 } },
+      tileElements,
+      toolsBtn,
+      addBtn
+    )
   )
 }
