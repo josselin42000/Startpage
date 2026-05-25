@@ -8,20 +8,22 @@ import Modal from './components/Modal'
 import ToolsPage from './components/ToolsPage'
 import FolderPage from './components/FolderPage'
 import Weather from './components/Weather'
+import CantonWeatherTooltip from './components/CantonWeatherTooltip'
 
 var EMOJIS_FOLDER = ['📁','📂','⭐','🔴','🟠','🟡','🟢','🔵','🟣','🏠','💼','🎯','🔧','📊','🎙️','🌱','🚀','💎','🎬','🌍']
 var COLORS_F = ['#CC0000','#1a6fc4','#1a8f5c','#9b3ccf','#d97316','#0891b2','#374151','#b45309']
 
 function useClock() {
-  var state = useState({ fr: '', cn: '' })
+  var state = useState({ fr: '', cn: '', date: '' })
   var clock = state[0]; var setClock = state[1]
   useEffect(function() {
     function tick() {
       var n = new Date()
-      var fr = n.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-      var cn = n.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Shanghai' })
-      var date = n.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })
-      setClock({ fr: fr, cn: cn, date: date })
+      setClock({
+        fr: n.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        cn: n.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Shanghai' }),
+        date: n.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' }),
+      })
     }
     tick(); var id = setInterval(tick, 10000)
     return function() { clearInterval(id) }
@@ -44,6 +46,7 @@ export default function App() {
   var folderModalState = useState(false); var folderModalOpen = folderModalState[0]; var setFolderModalOpen = folderModalState[1]
   var folderFormState = useState({ name: '', icon: '📁', color: '#CC0000' })
   var folderForm = folderFormState[0]; var setFolderForm = folderFormState[1]
+  var cantonHoverState = useState(false); var cantonHover = cantonHoverState[0]; var setCantonHover = cantonHoverState[1]
 
   var clock = useClock()
 
@@ -51,7 +54,6 @@ export default function App() {
     setLoading(true)
     loadTiles().then(function(data) { setTiles(data); setLoading(false) }).catch(function(e) { console.error(e); setLoading(false) })
   }, [])
-
   useEffect(function() { fetchTiles() }, [fetchTiles])
 
   function handleAdd(tile) {
@@ -61,19 +63,16 @@ export default function App() {
       setModalOpen(false)
     })
   }
-
   function handleUpdate(tile) {
     updateTile(editingTile.id, tile, tiles).then(function(updated) {
       if (updated) setTiles(function(prev) { return prev.map(function(t) { return t.id === editingTile.id ? updated : t }) })
       setModalOpen(false)
     })
   }
-
   function handleDelete(id) {
     if (!confirm('Supprimer ?')) return
     deleteTile(id, tiles).then(function(updated) { setTiles(updated) })
   }
-
   function handleEditCat(oldCat, newCat) {
     var toUpdate = tiles.filter(function(t) { return t.cat === oldCat })
     var updated = tiles.slice()
@@ -84,7 +83,6 @@ export default function App() {
       })
     })).then(function() { setTiles(updated.slice()) })
   }
-
   function handleDeleteCat(cat) {
     if (!confirm('Supprimer la categorie "' + cat + '" ?')) return
     var toUpdate = tiles.filter(function(t) { return t.cat === cat })
@@ -96,11 +94,9 @@ export default function App() {
       })
     })).then(function() { setTiles(updated.slice()); if (filterCat === cat) setFilterCat('all') })
   }
-
   function handleDragStart(e, id) { setDragging(id); e.dataTransfer.effectAllowed = 'move' }
   function handleDragOver(e, id) { e.preventDefault(); if (id !== dragging) setDragOver(id) }
   function handleDragEnd() { setDragging(null); setDragOver(null) }
-
   function handleDrop(e, targetId) {
     e.preventDefault()
     if (!dragging || dragging === targetId) { setDragging(null); setDragOver(null); return }
@@ -123,7 +119,6 @@ export default function App() {
     }
     setDragging(null); setDragOver(null)
   }
-
   function handleFolderReorder(dragId, targetId) {
     var dt = tiles.find(function(t) { return t.id === dragId })
     var tt = tiles.find(function(t) { return t.id === targetId })
@@ -137,7 +132,6 @@ export default function App() {
     updateTile(dragId, { position: tPos }, tiles)
     updateTile(targetId, { position: dPos }, tiles)
   }
-
   function handleRemoveFromFolder(tileId) {
     var t = tiles.find(function(x) { return x.id === tileId })
     if (!t) return
@@ -145,7 +139,6 @@ export default function App() {
       if (updated) setTiles(function(prev) { return prev.map(function(x) { return x.id === tileId ? updated : x }) })
     })
   }
-
   function handleCreateFolder() {
     if (!folderForm.name.trim()) return
     addTile({ name: folderForm.name.trim(), icon: folderForm.icon, color: folderForm.color, type: 'folder', url: '#', cat: '', logo: '', folder_id: null }, tiles).then(function(newTile) {
@@ -167,12 +160,10 @@ export default function App() {
 
   var hour = new Date().getHours()
   var greet = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon apres-midi' : 'Bonsoir'
-
   var inputStyle = { width: '100%', background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '9px 12px', color: '#e0e0e0', fontSize: 13, fontFamily: 'inherit', outline: 'none' }
   var labelStyle = { display: 'block', fontSize: 10, fontWeight: 700, color: '#444', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }
 
   if (page === 'tools') return React.createElement(ToolsPage, { onBack: function() { setPage('home') } })
-
   if (openFolder) {
     var folderTiles = tiles.filter(function(t) { return t.folder_id === openFolder.id }).sort(function(a, b) { return (a.position || 0) - (b.position || 0) })
     return React.createElement(FolderPage, {
@@ -189,11 +180,7 @@ export default function App() {
   }
 
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#080808' } },
-
-    // HEADER
     React.createElement('header', { style: { background: '#0a0a0a', borderBottom: '1px solid #1c1c1c', padding: '20px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 } },
-
-      // LEFT — titre centré
       React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 } },
         React.createElement('h1', { style: { fontSize: 24, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', display: 'flex', alignItems: 'center' } },
           React.createElement('span', { style: { color: '#fff' } }, 'GROUPE\u00a0'),
@@ -201,32 +188,30 @@ export default function App() {
         ),
         React.createElement('p', { style: { fontSize: 12, color: '#666', letterSpacing: '0.03em' } }, greet + ', let\'s go !')
       ),
-
-      // RIGHT — météo + horloges
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 } },
         React.createElement(Weather, null),
-
-        // Horloges
         React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 } },
-          // Date
           React.createElement('div', { style: { fontSize: 10, color: '#444', letterSpacing: '0.05em', textTransform: 'capitalize' } }, clock.date || ''),
-          // FR + CN
           React.createElement('div', { style: { display: 'flex', gap: 12, alignItems: 'center' } },
             React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
               React.createElement('span', { style: { fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '0.04em', fontVariantNumeric: 'tabular-nums' } }, clock.fr || ''),
               React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'France')
             ),
             React.createElement('div', { style: { width: 1, height: 28, background: '#222' } }),
-            React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
+            React.createElement('div', {
+              style: { display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', cursor: 'pointer' },
+              onMouseEnter: function() { setCantonHover(true) },
+              onMouseLeave: function() { setCantonHover(false) },
+            },
               React.createElement('span', { style: { fontSize: 22, fontWeight: 700, color: '#cc4400', letterSpacing: '0.04em', fontVariantNumeric: 'tabular-nums' } }, clock.cn || ''),
-              React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'Canton')
+              React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'Canton'),
+              cantonHover ? React.createElement(CantonWeatherTooltip, null) : null
             ),
             !hasSupabase ? React.createElement('span', { style: { fontSize: 9, color: '#333', textTransform: 'uppercase', marginLeft: 4 } }, 'local') : null
           )
         )
       )
     ),
-
     React.createElement(Toolbar, {
       cats: catSet, filterCat: filterCat, setFilterCat: setFilterCat,
       search: search, setSearch: setSearch,
