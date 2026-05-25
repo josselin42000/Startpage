@@ -4,10 +4,15 @@ function getInitials(name) {
   return (name || '').split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2)
 }
 
+function isEmojiChar(str) {
+  if (!str) return false
+  const code = str.codePointAt(0)
+  return code > 127
+}
+
 const styleInjected = { current: false }
 
 export default function Tile({ tile, editMode, onEdit, onDelete, onLongPressActivate, index }) {
-  const isEmoji = tile.icon && /\p{Emoji}/u.test(tile.icon)
   const pressTimer = useRef(null)
   const didLongPress = useRef(false)
 
@@ -15,7 +20,7 @@ export default function Tile({ tile, editMode, onEdit, onDelete, onLongPressActi
     if (styleInjected.current) return
     styleInjected.current = true
     const s = document.createElement('style')
-    s.textContent = `@keyframes wobble { 0% { transform: rotate(-1.5deg) scale(1.01); } 100% { transform: rotate(1.5deg) scale(1.01); } }`
+    s.textContent = '@keyframes wobble { 0% { transform: rotate(-1.5deg) scale(1.01); } 100% { transform: rotate(1.5deg) scale(1.01); } }'
     document.head.appendChild(s)
   }, [])
 
@@ -51,7 +56,7 @@ export default function Tile({ tile, editMode, onEdit, onDelete, onLongPressActi
         textDecoration: 'none', position: 'relative',
         transition: editMode ? 'none' : 'all .18s',
         userSelect: 'none', WebkitUserSelect: 'none',
-        animation: editMode ? `wobble 0.5s ease ${(index % 5) * 0.07}s infinite alternate` : 'none',
+        animation: editMode ? ('wobble 0.5s ease ' + ((index % 5) * 0.07) + 's infinite alternate') : 'none',
       }}
     >
       {editMode && (
@@ -64,16 +69,16 @@ export default function Tile({ tile, editMode, onEdit, onDelete, onLongPressActi
             alignItems: 'center', justifyContent: 'center', fontWeight: 700,
             lineHeight: 1, zIndex: 10,
           }}
-        >×</button>
+        >x</button>
       )}
       <div style={{
         width: 58, height: 58, borderRadius: 14, display: 'flex',
         alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-        border: `1px solid ${tile.color}44`, background: `${tile.color}18`, flexShrink: 0,
+        border: '1px solid ' + tile.color + '44', background: tile.color + '18', flexShrink: 0,
       }}>
         {tile.logo ? (
           <img src={tile.logo} alt={tile.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 6 }} />
-        ) : isEmoji ? (
+        ) : isEmojiChar(tile.icon) ? (
           <span style={{ fontSize: 28 }}>{tile.icon}</span>
         ) : (
           <span style={{ fontSize: 14, fontWeight: 700, color: tile.color }}>{getInitials(tile.name)}</span>
