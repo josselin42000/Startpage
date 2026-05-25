@@ -1,7 +1,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body, #root {
-  height: 100%;
+  min-height: 100%;
   background: #080808;
   color: #e0e0e0;
   font-family: 'Titillium Web', sans-serif;
@@ -11,9 +11,19 @@ html, body, #root {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
 
-input, button, select { font-family: inherit; }
+input, button, select, textarea { font-family: inherit; }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: none; }
+}
+
+@media (max-width: 600px) {
+  h1 { font-size: 18px !important; }
+  .clock-val { font-size: 18px !important; }
+  .grid-wrap { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)) !important; gap: 8px !important; }
+  .search-google { width: 130px !important; }
+  .ql-name { display: none; }
+  .header-row2 { gap: 10px !important; }
+  .toolbar-wrap { gap: 4px !important; padding: 6px 12px !important; }
 }
