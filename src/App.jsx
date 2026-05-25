@@ -1,105 +1,150 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { hasSupabase } from './supabase'
 import { loadTiles, addTile, updateTile, deleteTile } from './storage'
 import Toolbar from './components/Toolbar'
 import Grid from './components/Grid'
 import Modal from './components/Modal'
+import ToolsPage from './components/ToolsPage'
+import Weather from './components/Weather'
 
 export default function App() {
-  const [tiles, setTiles] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [editMode, setEditMode] = useState(false)
-  const [filterCat, setFilterCat] = useState('all')
-  const [search, setSearch] = useState('')
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editingTile, setEditingTile] = useState(null)
-  const [clock, setClock] = useState('')
+  var tilesState = useState([])
+  var tiles = tilesState[0]; var setTiles = tilesState[1]
+  var loadingState = useState(true)
+  var loading = loadingState[0]; var setLoading = loadingState[1]
+  var editModeState = useState(false)
+  var editMode = editModeState[0]; var setEditMode = editModeState[1]
+  var filterCatState = useState('all')
+  var filterCat = filterCatState[0]; var setFilterCat = filterCatState[1]
+  var searchState = useState('')
+  var search = searchState[0]; var setSearch = searchState[1]
+  var modalOpenState = useState(false)
+  var modalOpen = modalOpenState[0]; var setModalOpen = modalOpenState[1]
+  var editingTileState = useState(null)
+  var editingTile = editingTileState[0]; var setEditingTile = editingTileState[1]
+  var clockState = useState('')
+  var clock = clockState[0]; var setClock = clockState[1]
+  var pageState = useState('home')
+  var page = pageState[0]; var setPage = pageState[1]
 
-  useEffect(() => {
-    const tick = () => {
-      const n = new Date()
-      setClock(
-        n.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' }) +
-        ' · ' + n.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-      )
+  useEffect(function() {
+    function tick() {
+      var n = new Date()
+      setClock(n.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' }) + ' · ' + n.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }))
     }
     tick()
-    const id = setInterval(tick, 10000)
-    return () => clearInterval(id)
+    var id = setInterval(tick, 10000)
+    return function() { clearInterval(id) }
   }, [])
 
-  const fetchTiles = useCallback(async () => {
+  var fetchTiles = useCallback(function() {
     setLoading(true)
-    try { setTiles(await loadTiles()) } catch (e) { console.error(e) }
-    setLoading(false)
+    loadTiles().then(function(data) { setTiles(data); setLoading(false) }).catch(function(e) { console.error(e); setLoading(false) })
   }, [])
 
-  useEffect(() => { fetchTiles() }, [fetchTiles])
+  useEffect(function() { fetchTiles() }, [fetchTiles])
 
-  const handleAdd = async (tile) => {
-    const newTile = await addTile(tile, tiles)
-    if (newTile) setTiles(prev => [...prev, newTile])
-    setModalOpen(false)
+  function handleAdd(tile) {
+    addTile(tile, tiles).then(function(newTile) {
+      if (newTile) setTiles(function(prev) { return prev.concat([newTile]) })
+      setModalOpen(false)
+    })
   }
 
-  const handleUpdate = async (tile) => {
-    const updated = await updateTile(editingTile.id, tile, tiles)
-    if (updated) setTiles(prev => prev.map(t => t.id === editingTile.id ? updated : t))
-    setModalOpen(false)
+  function handleUpdate(tile) {
+    updateTile(editingTile.id, tile, tiles).then(function(updated) {
+      if (updated) setTiles(function(prev) { return prev.map(function(t) { return t.id === editingTile.id ? updated : t }) })
+      setModalOpen(false)
+    })
   }
 
-  const handleDelete = async (id) => {
+  function handleDelete(id) {
     if (!confirm('Supprimer ce lien ?')) return
-    setTiles(await deleteTile(id, tiles))
+    deleteTile(id, tiles).then(function(updated) { setTiles(updated) })
   }
 
-  const cats = ['all', ...new Set(tiles.map(t => t.cat).filter(Boolean))]
-  const shown = tiles.filter(t => {
-    const cOk = filterCat === 'all' || t.cat === filterCat
-    const sOk = !search || t.name.toLowerCase().includes(search.toLowerCase()) || (t.cat || '').toLowerCase().includes(search.toLowerCase())
+  function handleEditCat(oldCat, newCat) {
+    var toUpdate = tiles.filter(function(t) { return t.cat === oldCat })
+    var updated = tiles.slice()
+    Promise.all(toUpdate.map(function(t) {
+      return updateTile(t.id, Object.assign({}, t, { cat: newCat }), updated).then(function(result) {
+        var idx = updated.findIndex(function(x) { return x.id === t.id })
+        if (idx >= 0 && result) updated[idx] = result
+      })
+    })).then(function() { setTiles(updated.slice()) })
+  }
+
+  function handleDeleteCat(cat) {
+    if (!confirm('Supprimer la categorie "' + cat + '" ?')) return
+    var toUpdate = tiles.filter(function(t) { return t.cat === cat })
+    var updated = tiles.slice()
+    Promise.all(toUpdate.map(function(t) {
+      return updateTile(t.id, Object.assign({}, t, { cat: '' }), updated).then(function(result) {
+        var idx = updated.findIndex(function(x) { return x.id === t.id })
+        if (idx >= 0 && result) updated[idx] = result
+      })
+    })).then(function() { setTiles(updated.slice()); if (filterCat === cat) setFilterCat('all') })
+  }
+
+  var catSet = ['all']
+  tiles.forEach(function(t) { if (t.cat && catSet.indexOf(t.cat) === -1) catSet.push(t.cat) })
+
+  var shown = tiles.filter(function(t) {
+    var cOk = filterCat === 'all' || t.cat === filterCat
+    var sOk = !search || t.name.toLowerCase().indexOf(search.toLowerCase()) !== -1 || (t.cat || '').toLowerCase().indexOf(search.toLowerCase()) !== -1
     return cOk && sOk
   })
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <header style={{
-        background: '#0d0d0d', borderBottom: '1px solid #1c1c1c',
-        padding: '16px 28px', display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50
-      }}>
-        <h1 style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>
-          ● MON <span style={{ color: '#CC0000', marginLeft: 6 }}>ESPACE</span>
-        </h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          {!hasSupabase && (
-            <span style={{ fontSize: 10, color: '#333', letterSpacing: '0.06em', textTransform: 'uppercase', border: '1px solid #222', padding: '3px 8px', borderRadius: 4 }}>
-              local
-            </span>
-          )}
-          <span style={{ fontSize: 13, color: '#444', letterSpacing: '0.06em' }}>{clock}</span>
-        </div>
-      </header>
+  var hour = new Date().getHours()
+  var greet = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon apres-midi' : 'Bonsoir'
 
-      <Toolbar
-        cats={cats} filterCat={filterCat} setFilterCat={setFilterCat}
-        search={search} setSearch={setSearch}
-        editMode={editMode} setEditMode={setEditMode}
-      />
+  if (page === 'tools') {
+    return React.createElement(ToolsPage, { onBack: function() { setPage('home') } })
+  }
 
-      <main style={{ flex: 1, padding: 28 }}>
-        {loading ? (
-          <div style={{ textAlign: 'center', paddingTop: 80, color: '#333', fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            Chargement…
-          </div>
-        ) : (
-          <Grid tiles={shown} editMode={editMode} onAdd={() => { setEditingTile(null); setModalOpen(true) }}
-            onEdit={t => { setEditingTile(t); setModalOpen(true) }} onDelete={handleDelete} filterCat={filterCat} />
-        )}
-      </main>
-
-      {modalOpen && (
-        <Modal tile={editingTile} onSave={editingTile ? handleUpdate : handleAdd} onClose={() => setModalOpen(false)} />
-      )}
-    </div>
+  return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#080808' } },
+    React.createElement('header', {
+      style: { background: '#0a0a0a', borderBottom: '1px solid #1c1c1c', padding: '18px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }
+    },
+      React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
+        React.createElement('h1', { style: { fontSize: 22, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'flex', alignItems: 'center' } },
+          React.createElement('span', { style: { color: '#fff' } }, 'GROUPE\u00a0'),
+          React.createElement('span', { style: { color: '#CC0000' } }, 'LINEAR')
+        ),
+        React.createElement('p', { style: { fontSize: 13, color: '#888', letterSpacing: '0.03em' } }, greet + ', let\'s go !')
+      ),
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 20 } },
+        React.createElement(Weather, null),
+        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 } },
+          React.createElement('span', { style: { fontSize: 13, color: '#666', letterSpacing: '0.06em' } }, clock),
+          !hasSupabase ? React.createElement('span', { style: { fontSize: 9, color: '#333', textTransform: 'uppercase' } }, 'local') : null
+        )
+      )
+    ),
+    React.createElement(Toolbar, {
+      cats: catSet, filterCat: filterCat, setFilterCat: setFilterCat,
+      search: search, setSearch: setSearch,
+      editMode: editMode, setEditMode: setEditMode,
+      onEditCat: handleEditCat, onDeleteCat: handleDeleteCat,
+    }),
+    React.createElement('main', { style: { flex: 1, padding: 28 } },
+      loading
+        ? React.createElement('div', { style: { textAlign: 'center', paddingTop: 80, color: '#444', fontSize: 13 } }, 'Chargement...')
+        : React.createElement(Grid, {
+            tiles: shown, editMode: editMode,
+            onAdd: function() { setEditingTile(null); setModalOpen(true) },
+            onEdit: function(t) { setEditingTile(t); setModalOpen(true) },
+            onDelete: handleDelete,
+            onLongPressActivate: function() { setEditMode(true) },
+            onOpenTools: function() { setPage('tools') },
+            filterCat: filterCat,
+          })
+    ),
+    modalOpen ? React.createElement(Modal, {
+      tile: editingTile,
+      onSave: editingTile ? handleUpdate : handleAdd,
+      onClose: function() { setModalOpen(false) },
+    }) : null
   )
 }
