@@ -9,6 +9,7 @@ import ToolsPage from './components/ToolsPage'
 import FolderPage from './components/FolderPage'
 import Weather from './components/Weather'
 import CantonWeatherTooltip from './components/CantonWeatherTooltip'
+import IdeasPage from './components/IdeasPage'
 
 var EMOJIS_FOLDER = ['📁','📂','⭐','🔴','🟠','🟡','🟢','🔵','🟣','🏠','💼','🎯','🔧','📊','🎙️','🌱','🚀','💎','🎬','🌍']
 var COLORS_F = ['#CC0000','#1a6fc4','#1a8f5c','#9b3ccf','#d97616','#0891b2','#374151','#b45309']
@@ -164,9 +165,7 @@ export default function App() {
     })
   }
   function saveQlModal() {
-    saveQL(qlForm)
-    setQuickLinks(qlForm)
-    setQlModalOpen(false)
+    saveQL(qlForm); setQuickLinks(qlForm); setQlModalOpen(false)
   }
 
   var catSet = ['all']
@@ -185,6 +184,7 @@ export default function App() {
   var labelStyle = { display: 'block', fontSize: 10, fontWeight: 700, color: '#555', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }
 
   if (page === 'tools') return React.createElement(ToolsPage, { onBack: function() { setPage('home') } })
+  if (page === 'ideas') return React.createElement(IdeasPage, { onBack: function() { setPage('home') } })
   if (openFolder) {
     var folderTiles = tiles.filter(function(t) { return t.folder_id === openFolder.id }).sort(function(a, b) { return (a.position || 0) - (b.position || 0) })
     return React.createElement(FolderPage, {
@@ -204,10 +204,9 @@ export default function App() {
 
     React.createElement('header', { style: { background: '#0a0a0a', borderBottom: '1px solid #1c1c1c', padding: '0 20px' } },
 
-      // ROW 1 : quick links | titre centré | éditer
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', padding: '10px 0', gap: 12 } },
 
-        // QUICK LINKS gauche
+        // QUICK LINKS
         React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' } },
           quickLinks.map(function(ql) {
             return React.createElement('a', {
@@ -224,7 +223,7 @@ export default function App() {
           }, '✏️ Liens') : null
         ),
 
-        // TITRE centré
+        // TITRE
         React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' } },
           React.createElement('h1', { style: { fontSize: 22, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', display: 'flex', alignItems: 'center' } },
             React.createElement('span', { style: { color: '#fff' } }, 'GROUPE\u00a0'),
@@ -233,22 +232,21 @@ export default function App() {
           React.createElement('p', { style: { fontSize: 12, color: '#666' } }, greet + ', let\'s go !')
         ),
 
-        // ÉDITER droite
+        // EDITER
         React.createElement('button', {
           onClick: function() { setEditMode(function(v) { return !v }) },
           style: { flexShrink: 0, padding: '7px 18px', background: editMode ? '#1a0000' : 'transparent', border: editMode ? '1px solid #CC0000' : '1px solid #2a2a2a', borderRadius: 8, color: editMode ? '#CC0000' : '#888', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'inherit' }
         }, editMode ? 'Terminer' : 'Editer')
       ),
 
-      // ROW 2 : météo + date + horloges centrés
+      // ROW 2 météo + horloges
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '8px 0 12px', flexWrap: 'wrap' } },
-
         React.createElement(Weather, null),
         React.createElement('div', { style: { width: 1, height: 28, background: '#1c1c1c' } }),
         React.createElement('div', { style: { fontSize: 11, color: '#555', textTransform: 'capitalize' } }, clock.date || ''),
         React.createElement('div', { style: { width: 1, height: 28, background: '#1c1c1c' } }),
 
-        // FR — survol = météo 7j
+        // FR
         React.createElement('div', {
           style: { display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', cursor: 'default' },
           onMouseEnter: function() { setFrHover(true) },
@@ -256,12 +254,14 @@ export default function App() {
         },
           React.createElement('span', { style: { fontSize: 24, fontWeight: 700, color: '#fff', fontVariantNumeric: 'tabular-nums' } }, clock.fr || ''),
           React.createElement('span', { style: { fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'France'),
-          frHover ? React.createElement(Weather, { forceOpen: true }) : null
+          frHover ? React.createElement('div', { style: { position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)', zIndex: 200 } },
+            React.createElement(Weather, { forceOpen: true })
+          ) : null
         ),
 
         React.createElement('div', { style: { width: 1, height: 28, background: '#1c1c1c' } }),
 
-        // CN — survol = météo Canton
+        // CN
         React.createElement('div', {
           style: { display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', cursor: 'default' },
           onMouseEnter: function() { setCantonHover(true) },
@@ -295,6 +295,7 @@ export default function App() {
             onDelete: handleDelete,
             onLongPressActivate: function() { setEditMode(true) },
             onOpenTools: function() { setPage('tools') },
+            onOpenIdeas: function() { setPage('ideas') },
             onOpenFolder: function(f) { setOpenFolder(f) },
             filterCat: filterCat,
             dragging: dragging, dragOver: dragOver,
@@ -303,7 +304,12 @@ export default function App() {
           })
     ),
 
-    modalOpen ? React.createElement(Modal, { tile: editingTile, onSave: editingTile ? handleUpdate : handleAdd, onClose: function() { setModalOpen(false) } }) : null,
+    modalOpen ? React.createElement(Modal, {
+      tile: editingTile,
+      onSave: editingTile ? handleUpdate : handleAdd,
+      onClose: function() { setModalOpen(false) },
+      existingCats: catSet.filter(function(c) { return c !== 'all' })
+    }) : null,
 
     // MODAL QUICK LINKS
     qlModalOpen ? React.createElement('div', {
