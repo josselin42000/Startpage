@@ -6,7 +6,8 @@ export default function Grid(props) {
   var tiles = props.tiles; var allTiles = props.allTiles; var editMode = props.editMode
   var onAdd = props.onAdd; var onAddFolder = props.onAddFolder; var onEdit = props.onEdit
   var onDelete = props.onDelete; var onLongPressActivate = props.onLongPressActivate
-  var onOpenTools = props.onOpenTools; var onOpenFolder = props.onOpenFolder
+  var onOpenTools = props.onOpenTools; var onOpenIdeas = props.onOpenIdeas
+  var onOpenFolder = props.onOpenFolder
   var filterCat = props.filterCat; var dragging = props.dragging; var dragOver = props.dragOver
   var onDragStart = props.onDragStart; var onDragOver = props.onDragOver
   var onDrop = props.onDrop; var onDragEnd = props.onDragEnd
@@ -20,6 +21,17 @@ export default function Grid(props) {
     }
     return React.createElement(Tile, { key: t.id, tile: t, editMode: editMode, index: i, dragging: dragging, dragOver: dragOver, onEdit: onEdit, onDelete: onDelete, onLongPressActivate: onLongPressActivate, onDragStart: onDragStart, onDragOver: onDragOver, onDrop: onDrop, onDragEnd: onDragEnd })
   })
+
+  var ideasBtn = React.createElement('div', {
+    key: 'ideas', onClick: onOpenIdeas,
+    style: { background: '#1a1a1a', border: '1px solid #b4530933', borderRadius: 12, padding: '16px 10px 12px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
+    onMouseEnter: function(e) { e.currentTarget.style.background = '#1a1200'; e.currentTarget.style.borderColor = '#b4530966' },
+    onMouseLeave: function(e) { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.borderColor = '#b4530933' },
+  },
+    React.createElement('div', { style: { width: 50, height: 50, borderRadius: 12, background: '#b4530918', border: '1px solid #b4530944', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 } }, '💡'),
+    React.createElement('div', { style: { fontSize: 13, fontWeight: 700, color: '#ddd' } }, 'Idees'),
+    React.createElement('div', { style: { fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 8px', border: '1px solid #2a2a2a', borderRadius: 20 } }, 'Notes')
+  )
 
   var toolsBtn = React.createElement('div', {
     key: 'tools', onClick: onOpenTools,
@@ -56,7 +68,7 @@ export default function Grid(props) {
     React.createElement('div', { style: { fontSize: 11, fontWeight: 700, color: '#444', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 } }, label),
     editMode ? React.createElement('p', { style: { fontSize: 11, color: '#555', marginBottom: 14 } }, 'Glisser pour reordonner · Deposer sur un dossier pour y ajouter') : null,
     React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 } },
-      elements, toolsBtn, addFolderBtn, addBtn
+      elements, ideasBtn, toolsBtn, addFolderBtn, addBtn
     )
   )
 }
