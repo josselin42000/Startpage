@@ -300,7 +300,7 @@ export default function UserPage(props) {
     desc: 'Entrez votre code d\'accès'
   })
 
-  if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setShowIdeas(false) } })
+if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setShowIdeas(false) }, pageId: page ? page.id : null })
   if (showTools) return React.createElement(UserFolder, { onBack: function() { setShowTools(false) } })
 
   if (openFolder) {
