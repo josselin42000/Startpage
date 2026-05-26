@@ -1,6 +1,7 @@
 import React from 'react'
 import Tile from './Tile'
 import FolderTile from './FolderTile'
+import { StickyInlineWidget } from './StickyNotes'
 
 export default function Grid(props) {
   var tiles = props.tiles
@@ -48,7 +49,7 @@ export default function Grid(props) {
     })
   })
 
-  var stickiesBtn = React.createElement('div', {
+  var stickiesBtn = React.createElement(StickyInlineWidget, { key: 'stickies' })
     key: 'stickies', onClick: onOpenStickies,
     style: { background: '#1a1a1a', border: '1px solid #b4530933', borderRadius: 12, padding: '16px 10px 12px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
     onMouseEnter: function(e) { e.currentTarget.style.background = '#1a1200'; e.currentTarget.style.borderColor = '#b4530966' },
