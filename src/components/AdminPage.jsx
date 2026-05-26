@@ -21,6 +21,7 @@ function UserPageForm(props) {
   var showIdeasS = useState(page ? page.show_ideas : false); var showIdeas = showIdeasS[0]; var setShowIdeas = showIdeasS[1]
   var showToolsS = useState(page ? page.show_tools : false); var showTools = showToolsS[0]; var setShowTools = showToolsS[1]
   var canAddS = useState(page ? page.can_add_tiles : false); var canAdd = canAddS[0]; var setCanAdd = canAddS[1]
+  var showCnS = useState(page ? !!page.show_clock_cn : false); var showCn = showCnS[0]; var setShowCn = showCnS[1]
   var imposedS = useState(page ? (page.imposed_tile_ids || []) : []); var imposed = imposedS[0]; var setImposed = imposedS[1]
   var errS = useState(''); var err = errS[0]; var setErr = errS[1]
   var showPinsS = useState(false); var showPins = showPinsS[0]; var setShowPins = showPinsS[1]
@@ -36,7 +37,7 @@ function UserPageForm(props) {
     onSave({
       slug: cleanSlug, display_name: name.trim(), avatar: avatar, color: color,
       show_tiles: showTiles, show_ideas: showIdeas, show_tools: showTools,
-      can_add_tiles: canAdd, imposed_tile_ids: imposed,
+      can_add_tiles: canAdd, show_clock_cn: showCn, imposed_tile_ids: imposed,
       page_pin: pagePin.trim(), ideas_pin: ideasPin.trim()
     })
   }
@@ -103,7 +104,8 @@ function UserPageForm(props) {
         React.createElement(Toggle, { label: 'Voir les liens', desc: 'Liens imposés par l\'admin', value: showTiles, onChange: setShowTiles }),
         React.createElement(Toggle, { label: 'Ajouter ses propres liens', desc: 'L\'utilisateur peut ajouter ses liens', value: canAdd, onChange: setCanAdd }),
         React.createElement(Toggle, { label: 'Boite à idées', value: showIdeas, onChange: setShowIdeas }),
-        React.createElement(Toggle, { label: 'Outils', value: showTools, onChange: setShowTools })
+        React.createElement(Toggle, { label: 'Outils', value: showTools, onChange: setShowTools }),
+        React.createElement(Toggle, { label: 'Heure de Canton', desc: 'Affiche l\'heure chinoise dans le header', value: showCn, onChange: setShowCn })
       ),
 
       React.createElement('div', { style: { marginBottom: 20 } },
@@ -226,7 +228,7 @@ export default function AdminPage(props) {
       load ? React.createElement('div', { style: { color: '#444', fontSize: 13, textAlign: 'center', paddingTop: 40 } }, 'Chargement...') :
 
       tab === 'pages' ? React.createElement('div', null,
-        pages.length === 0 ? React.createElement('div', { style: { textAlign: 'center', paddingTop: 40, color: '#333', fontSize: 13 } }, 'Aucune page') :
+        pages.length === 0 ? React.createElement('div', { style: { textAlign: 'center', paddingTop: 40, color: '#333', fontSize: 13 } }, 'Aucune page — cliquez "+ Nouvelle page"') :
         pages.map(function(p) {
           return React.createElement('div', { key: p.id, style: { background: '#111', border: '1px solid #1e1e1e', borderRadius: 12, padding: 18, marginBottom: 12 } },
             React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' } },
@@ -240,8 +242,8 @@ export default function AdminPage(props) {
                 p.can_add_tiles ? React.createElement('span', { style: { fontSize: 9, color: '#888', border: '1px solid #252525', borderRadius: 10, padding: '2px 8px' } }, '✏️ Peut ajouter') : null,
                 p.show_ideas ? React.createElement('span', { style: { fontSize: 9, color: '#888', border: '1px solid #252525', borderRadius: 10, padding: '2px 8px' } }, '💡 Idées') : null,
                 p.show_tools ? React.createElement('span', { style: { fontSize: 9, color: '#888', border: '1px solid #252525', borderRadius: 10, padding: '2px 8px' } }, '🛠️ Outils') : null,
-                p.page_pin ? React.createElement('span', { style: { fontSize: 9, color: '#b45309', border: '1px solid #b4530933', borderRadius: 10, padding: '2px 8px' } }, '🔐 PIN page') : null,
-                p.ideas_pin ? React.createElement('span', { style: { fontSize: 9, color: '#b45309', border: '1px solid #b4530933', borderRadius: 10, padding: '2px 8px' } }, '💡 PIN idées') : null
+                p.show_clock_cn ? React.createElement('span', { style: { fontSize: 9, color: '#888', border: '1px solid #252525', borderRadius: 10, padding: '2px 8px' } }, '🕐 Canton') : null,
+                p.page_pin ? React.createElement('span', { style: { fontSize: 9, color: '#b45309', border: '1px solid #b4530933', borderRadius: 10, padding: '2px 8px' } }, '🔐 PIN') : null
               ),
               React.createElement('div', { style: { display: 'flex', gap: 8, flexShrink: 0 } },
                 React.createElement('button', { onClick: function() { setEditingPage(p); setFormOpen(true) }, style: { padding: '6px 14px', background: 'transparent', border: '1px solid #2a2a2a', borderRadius: 6, color: '#aaa', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' } }, 'Modifier'),
