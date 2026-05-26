@@ -40,7 +40,7 @@ function WeatherTooltip(props) {
   var data = props.data
   if (!data || !data.daily) return null
   return React.createElement('div', {
-    style: { position: 'absolute', top: 52, left: '50%', transform: 'translateX(-50%)', background: '#111', border: '1px solid #252525', borderRadius: 12, padding: 14, zIndex: 200, minWidth: 220, boxShadow: '0 8px 32px rgba(0,0,0,0.8)' }
+    style: { position: 'absolute', top: 50, left: '50%', transform: 'translateX(-50%)', background: '#111', border: '1px solid #252525', borderRadius: 12, padding: 14, zIndex: 200, minWidth: 220, boxShadow: '0 8px 32px rgba(0,0,0,0.8)' }
   },
     React.createElement('div', { style: { fontSize: 10, fontWeight: 700, color: '#555', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 } }, 'Météo · 7 jours'),
     data.daily.time.map(function(dateStr, i) {
@@ -96,7 +96,7 @@ function UserFolder(props) {
       ),
       React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 } },
         React.createElement('div', { style: { fontSize: 48 } }, active.icon),
-        React.createElement('div', { style: { fontSize: 13, color: '#555', textAlign: 'center' } }, active.name + ' bloque les iframes par sécurité.'),
+        React.createElement('div', { style: { fontSize: 13, color: '#555' } }, active.name + ' bloque les iframes.'),
         React.createElement('a', { href: active.url, target: '_blank', rel: 'noopener noreferrer', style: { padding: '11px 28px', background: '#CC0000', color: '#fff', textDecoration: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700 } }, 'Ouvrir dans un nouvel onglet')
       )
     )
@@ -127,11 +127,8 @@ function UserFolder(props) {
 }
 
 function UserCustomFolder(props) {
-  var folder = props.folder
-  var tiles = props.tiles
-  var onBack = props.onBack
-  var onAddTile = props.onAddTile
-  var onDeleteTile = props.onDeleteTile
+  var folder = props.folder; var tiles = props.tiles; var onBack = props.onBack
+  var onAddTile = props.onAddTile; var onDeleteTile = props.onDeleteTile
 
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#080808' } },
     React.createElement('header', { style: { background: '#0a0a0a', borderBottom: '1px solid #1c1c1c', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: 12 } },
@@ -148,15 +145,7 @@ function UserCustomFolder(props) {
             React.createElement(Tile, { tile: t, editMode: false, index: i })
           )
         }),
-        React.createElement('div', {
-          onClick: onAddTile,
-          style: { background: '#0f0f0f', border: '1px dashed #2a2a2a', borderRadius: 12, padding: '16px 10px 12px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: '#444' },
-          onMouseEnter: function(e) { e.currentTarget.style.borderColor = '#CC0000'; e.currentTarget.style.color = '#CC0000'; e.currentTarget.style.background = '#0b0000' },
-          onMouseLeave: function(e) { e.currentTarget.style.borderColor = '#2a2a2a'; e.currentTarget.style.color = '#444'; e.currentTarget.style.background = '#0f0f0f' }
-        },
-          React.createElement('div', { style: { width: 50, height: 50, borderRadius: 12, background: '#161616', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, color: 'inherit' } }, '+'),
-          React.createElement('div', { style: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'inherit' } }, 'Ajouter')
-        )
+        React.createElement('div', { onClick: onAddTile, style: { background: '#0f0f0f', border: '1px dashed #2a2a2a', borderRadius: 12, padding: 20, cursor: 'pointer', textAlign: 'center', color: '#333', fontSize: 12 }, onMouseEnter: function(e) { e.currentTarget.style.borderColor = '#CC0000'; e.currentTarget.style.color = '#CC0000' }, onMouseLeave: function(e) { e.currentTarget.style.borderColor = '#2a2a2a'; e.currentTarget.style.color = '#333' } }, '+ Ajouter')
       )
     )
   )
@@ -209,9 +198,7 @@ export default function UserPage(props) {
       if (!p.ideas_pin) setIdeasUnlocked(true)
       var promises = []
       if (p.show_tiles && p.imposed_tile_ids && p.imposed_tile_ids.length > 0) {
-        promises.push(supabase.from('tiles').select('*').in('id', p.imposed_tile_ids).then(function(r) {
-          if (!r.error && r.data) setTiles(r.data)
-        }))
+        promises.push(supabase.from('tiles').select('*').in('id', p.imposed_tile_ids).then(function(r) { if (!r.error && r.data) setTiles(r.data) }))
       }
       promises.push(supabase.from('user_page_tiles').select('*').eq('page_id', p.id).order('position').then(function(r) {
         if (!r.error && r.data) {
@@ -220,9 +207,7 @@ export default function UserPage(props) {
           setUserTiles(rootTiles)
           setFolders(foldersData)
           var ftMap = {}
-          foldersData.forEach(function(f) {
-            ftMap[f.id] = r.data.filter(function(t) { return t.folder_id === f.id })
-          })
+          foldersData.forEach(function(f) { ftMap[f.id] = r.data.filter(function(t) { return t.folder_id === f.id }) })
           setFolderTiles(ftMap)
         }
       }))
@@ -239,11 +224,7 @@ export default function UserPage(props) {
       if (!res.error && res.data) {
         var newTile = res.data[0]
         if (folderId) {
-          setFolderTiles(function(prev) {
-            var updated = Object.assign({}, prev)
-            updated[folderId] = (updated[folderId] || []).concat([newTile])
-            return updated
-          })
+          setFolderTiles(function(prev) { var u = Object.assign({}, prev); u[folderId] = (u[folderId] || []).concat([newTile]); return u })
         } else {
           setUserTiles(function(prev) { return prev.concat([newTile]) })
         }
@@ -257,11 +238,7 @@ export default function UserPage(props) {
     if (!confirm('Supprimer ?')) return
     supabase.from('user_page_tiles').delete().eq('id', id).then(function() {
       if (folderId) {
-        setFolderTiles(function(prev) {
-          var updated = Object.assign({}, prev)
-          updated[folderId] = (updated[folderId] || []).filter(function(t) { return t.id !== id })
-          return updated
-        })
+        setFolderTiles(function(prev) { var u = Object.assign({}, prev); u[folderId] = (u[folderId] || []).filter(function(t) { return t.id !== id }); return u })
       } else {
         setUserTiles(function(prev) { return prev.filter(function(t) { return t.id !== id }) })
       }
@@ -291,17 +268,8 @@ export default function UserPage(props) {
     React.createElement('div', { style: { fontSize: 14, color: '#444' } }, 'Page introuvable'),
     React.createElement('a', { href: '/', style: { fontSize: 12, color: '#CC0000', textDecoration: 'none' } }, 'Retour')
   )
-
-  // PIN PAGE — plein écran centré
-  if (page.page_pin && !pageUnlocked) return React.createElement(PinGate, {
-    correctPin: page.page_pin,
-    onUnlock: function() { setPageUnlocked(true) },
-    icon: page.avatar || '🔐',
-    title: 'Espace de ' + page.display_name,
-    desc: 'Entrez votre code d\'accès'
-  })
-
-if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setShowIdeas(false) }, pageId: page ? page.id : null })
+  if (page.page_pin && !pageUnlocked) return React.createElement(PinGate, { correctPin: page.page_pin, onUnlock: function() { setPageUnlocked(true) }, icon: page.avatar || '🔐', title: 'Espace de ' + page.display_name, desc: 'Entrez votre code d\'accès' })
+  if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setShowIdeas(false) }, pageId: page ? page.id : null })
   if (showTools) return React.createElement(UserFolder, { onBack: function() { setShowTools(false) } })
 
   if (openFolder) {
@@ -312,8 +280,7 @@ if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setS
       icon: openFolder.icon || '📁', title: openFolder.name, desc: 'Entrez le code du dossier'
     })
     return React.createElement(UserCustomFolder, {
-      folder: openFolder,
-      tiles: folderTiles[openFolder.id] || [],
+      folder: openFolder, tiles: folderTiles[openFolder.id] || [],
       onBack: function() { setOpenFolder(null) },
       onAddTile: function() { setAddToFolder(openFolder.id); setAddModal(true) },
       onDeleteTile: function(id) { handleDeleteTile(id, openFolder.id) }
@@ -329,17 +296,15 @@ if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setS
   userTiles.forEach(function(t) { allGrid.push({ tile: t, type: 'user' }) })
   folders.forEach(function(f) { allGrid.push({ tile: f, type: 'folder' }) })
   if (page.show_tools) allGrid.push({ tile: { id: '__tools__', name: 'Outils', icon: '🛠️', color: '#CC0000' }, type: 'tools' })
-  if (page.show_ideas) allGrid.push({ tile: { id: '__ideas__', name: 'Boite à idées', icon: '💡', color: '#b45309' }, type: 'ideas' })
   allGrid.push({ tile: { id: '__stickies__', name: 'Notes', icon: '🗒️', color: '#b45309' }, type: 'stickies' })
+  if (page.show_ideas) allGrid.push({ tile: { id: '__ideas__', name: 'Boite à idées', icon: '💡', color: '#b45309' }, type: 'ideas' })
 
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#080808' } },
 
     React.createElement('header', { style: { background: '#0a0a0a', borderBottom: '1px solid #1c1c1c', padding: '0 20px' } },
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', padding: '12px 0', gap: 12 } },
         React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 } },
-          React.createElement('div', { style: { width: 40, height: 40, borderRadius: '50%', background: (page.color || '#1a6fc4') + '22', border: '2px solid ' + (page.color || '#1a6fc4') + '66', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: page.avatar ? 20 : 13, fontWeight: 700, color: page.color || '#1a6fc4', flexShrink: 0 } },
-            page.avatar || getInitials(page.display_name)
-          ),
+          React.createElement('div', { style: { width: 40, height: 40, borderRadius: '50%', background: (page.color || '#1a6fc4') + '22', border: '2px solid ' + (page.color || '#1a6fc4') + '66', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: page.avatar ? 20 : 13, fontWeight: 700, color: page.color || '#1a6fc4', flexShrink: 0 } }, page.avatar || getInitials(page.display_name)),
           React.createElement('div', null,
             React.createElement('div', { style: { fontSize: 13, fontWeight: 700, color: '#ddd' } }, page.display_name),
             React.createElement('div', { style: { fontSize: 11, color: '#555' } }, greet + ', ' + firstName + ' !')
@@ -383,7 +348,15 @@ if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setS
 
         allGrid.map(function(item, i) {
           var t = item.tile
-          if (item.type === 'folder' || item.type === 'tools' || item.type === 'ideas') {
+
+          // NOTES RAPIDES — widget inline Supabase
+          if (item.type === 'stickies') {
+            return React.createElement(MemberStickyWidget, { key: '__stickies__', pageId: page.id })
+          }
+
+          var isFolder = item.type === 'folder' || item.type === 'tools' || item.type === 'ideas'
+
+          if (isFolder) {
             var childCount = item.type === 'folder' ? (folderTiles[t.id] ? folderTiles[t.id].length : 0) : item.type === 'tools' ? 6 : 0
             return React.createElement('div', {
               key: t.id,
@@ -406,6 +379,7 @@ if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setS
               )
             )
           }
+
           return React.createElement('div', { key: t.id, style: { position: 'relative' } },
             item.type === 'user' ? React.createElement('button', { onClick: function() { handleDeleteTile(t.id, null) }, style: { position: 'absolute', top: -6, right: -6, width: 20, height: 20, background: '#CC0000', border: '2px solid #080808', borderRadius: '50%', color: '#fff', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, zIndex: 10 } }, 'x') : null,
             React.createElement(Tile, { tile: t, editMode: false, index: i })
@@ -434,19 +408,13 @@ if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setS
       )
     ),
 
-    // MODAL PIN IDÉES (popup au clic)
     ideasPinModal ? React.createElement('div', {
       onClick: function(e) { if (e.target === e.currentTarget) setIdeasPinModal(false) },
       style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }
     },
-      React.createElement(PinGate, {
-        correctPin: page.ideas_pin,
-        onUnlock: function() { setIdeasUnlocked(true); setIdeasPinModal(false); setShowIdeas(true) },
-        icon: '💡', title: 'Boite à idées protégée', desc: 'Entrez le code pour accéder'
-      })
+      React.createElement(PinGate, { correctPin: page.ideas_pin, onUnlock: function() { setIdeasUnlocked(true); setIdeasPinModal(false); setShowIdeas(true) }, icon: '💡', title: 'Boite à idées protégée', desc: 'Entrez le code pour accéder' })
     ) : null,
 
-    // MODAL AJOUT LIEN
     addModal ? React.createElement('div', {
       onClick: function(e) { if (e.target === e.currentTarget) { setAddModal(false); setAddToFolder(null) } },
       style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }
@@ -468,7 +436,6 @@ if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setS
       )
     ) : null,
 
-    // MODAL CRÉER DOSSIER
     addFolderModal ? React.createElement('div', {
       onClick: function(e) { if (e.target === e.currentTarget) setAddFolderModal(false) },
       style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }
