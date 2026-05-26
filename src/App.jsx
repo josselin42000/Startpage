@@ -23,9 +23,7 @@ var DEFAULT_QUICK_LINKS = [
 ]
 
 var QL_KEY = 'startpage_quicklinks_v1'
-function loadQL() {
-  try { var r = localStorage.getItem(QL_KEY); return r ? JSON.parse(r) : DEFAULT_QUICK_LINKS } catch(e) { return DEFAULT_QUICK_LINKS }
-}
+function loadQL() { try { var r = localStorage.getItem(QL_KEY); return r ? JSON.parse(r) : DEFAULT_QUICK_LINKS } catch(e) { return DEFAULT_QUICK_LINKS } }
 function saveQL(ql) { try { localStorage.setItem(QL_KEY, JSON.stringify(ql)) } catch(e) {} }
 
 function useClock() {
@@ -77,9 +75,7 @@ export default function App() {
       if (res.data && res.data.session && res.data.session.user) {
         var u = res.data.session.user
         setCurrentUser(u)
-        supabase.from('profiles').select('*').eq('id', u.id).single().then(function(pr) {
-          if (pr.data) setProfile(pr.data)
-        })
+        supabase.from('profiles').select('*').eq('id', u.id).single().then(function(pr) { if (pr.data) setProfile(pr.data) })
       }
       setAuthLoad(false)
     })
@@ -202,8 +198,8 @@ export default function App() {
 
   var hour = new Date().getHours()
   var greet = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon apres-midi' : 'Bonsoir'
-  var inputStyle = { width: '100%', background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '9px 12px', color: '#e0e0e0', fontSize: 13, fontFamily: 'inherit', outline: 'none' }
   var labelStyle = { display: 'block', fontSize: 10, fontWeight: 700, color: '#555', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }
+  var inputStyle = { width: '100%', background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 8, padding: '9px 12px', color: '#e0e0e0', fontSize: 13, fontFamily: 'inherit', outline: 'none' }
 
   if (hasSupabase && authLoad) return React.createElement('div', { style: { minHeight: '100vh', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444', fontSize: 13 } }, 'Chargement...')
   if (hasSupabase && !currentUser) return React.createElement(AuthPage, {
@@ -217,6 +213,7 @@ export default function App() {
   if (page === 'tools') return React.createElement(ToolsPage, { onBack: function() { setPage('home') } })
   if (page === 'ideas') return React.createElement(IdeasPage, { onBack: function() { setPage('home') } })
   if (page === 'stickies') return React.createElement(StickyNotes, { onBack: function() { setPage('home') } })
+
   if (openFolder) {
     var folderTiles = tiles.filter(function(t) { return t.folder_id === openFolder.id }).sort(function(a, b) { return (a.position || 0) - (b.position || 0) })
     return React.createElement(FolderPage, {
@@ -237,8 +234,6 @@ export default function App() {
     React.createElement('header', { style: { background: '#0a0a0a', borderBottom: '1px solid #1c1c1c', padding: '0 20px' } },
 
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', padding: '10px 0', gap: 12 } },
-
-        // QUICK LINKS
         React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' } },
           quickLinks.map(function(ql) {
             return React.createElement('a', {
@@ -246,7 +241,7 @@ export default function App() {
               style: { display: 'flex', alignItems: 'center', gap: 6, background: '#141414', border: '1px solid #222', borderRadius: 8, padding: '6px 12px', textDecoration: 'none', color: '#ccc', fontSize: 12, fontWeight: 600 }
             },
               React.createElement('span', { style: { fontSize: 16 } }, ql.icon || '🔗'),
-              React.createElement('span', null, ql.name)
+              React.createElement('span', { className: 'ql-name' }, ql.name)
             )
           }),
           editMode ? React.createElement('button', {
@@ -255,7 +250,6 @@ export default function App() {
           }, '✏️ Liens') : null
         ),
 
-        // TITRE
         React.createElement('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' } },
           React.createElement('h1', { style: { fontSize: 22, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', display: 'flex', alignItems: 'center' } },
             React.createElement('span', { style: { color: '#fff' } }, 'GROUPE\u00a0'),
@@ -264,7 +258,6 @@ export default function App() {
           React.createElement('p', { style: { fontSize: 12, color: '#666' } }, greet + ', let\'s go !')
         ),
 
-     // USER + ADMIN + EDITER
         React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
           currentUser ? React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
             React.createElement('span', { style: { fontSize: 10, color: '#444', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, currentUser.email),
@@ -280,8 +273,7 @@ export default function App() {
         )
       ),
 
-      // ROW 2 météo + horloges
-      React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '8px 0 12px', flexWrap: 'wrap' } },
+      React.createElement('div', { className: 'header-row2', style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '8px 0 12px', flexWrap: 'wrap' } },
         React.createElement(Weather, null),
         React.createElement('div', { style: { width: 1, height: 28, background: '#1c1c1c' } }),
         React.createElement('div', { style: { fontSize: 11, color: '#555', textTransform: 'capitalize' } }, clock.date || ''),
@@ -291,7 +283,7 @@ export default function App() {
           onMouseEnter: function() { setFrHover(true) },
           onMouseLeave: function() { setFrHover(false) },
         },
-          React.createElement('span', { style: { fontSize: 24, fontWeight: 700, color: '#fff', fontVariantNumeric: 'tabular-nums' } }, clock.fr || ''),
+          React.createElement('span', { className: 'clock-val', style: { fontSize: 24, fontWeight: 700, color: '#fff', fontVariantNumeric: 'tabular-nums' } }, clock.fr || ''),
           React.createElement('span', { style: { fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'France'),
           frHover ? React.createElement('div', { style: { position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)', zIndex: 200 } },
             React.createElement(Weather, { forceOpen: true })
@@ -303,7 +295,7 @@ export default function App() {
           onMouseEnter: function() { setCantonHover(true) },
           onMouseLeave: function() { setCantonHover(false) },
         },
-          React.createElement('span', { style: { fontSize: 24, fontWeight: 700, color: '#cc4400', fontVariantNumeric: 'tabular-nums' } }, clock.cn || ''),
+          React.createElement('span', { className: 'clock-val', style: { fontSize: 24, fontWeight: 700, color: '#cc4400', fontVariantNumeric: 'tabular-nums' } }, clock.cn || ''),
           React.createElement('span', { style: { fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'Canton'),
           cantonHover ? React.createElement(CantonWeatherTooltip, null) : null
         ),
@@ -331,12 +323,12 @@ export default function App() {
             onLongPressActivate: function() { setEditMode(true) },
             onOpenTools: function() { setPage('tools') },
             onOpenIdeas: function() { setPage('ideas') },
+            onOpenStickies: function() { setPage('stickies') },
             onOpenFolder: function(f) { setOpenFolder(f) },
             filterCat: filterCat,
             dragging: dragging, dragOver: dragOver,
             onDragStart: handleDragStart, onDragOver: handleDragOver,
             onDrop: handleDrop, onDragEnd: handleDragEnd,
-            onOpenStickies: function() { setPage('stickies') },
           })
     ),
 
