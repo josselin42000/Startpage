@@ -262,18 +262,14 @@ export default function App() {
           React.createElement('p', { style: { fontSize: 12, color: '#666' } }, greet + ', let\'s go !')
         ),
 
-        // USER + ADMIN + EDITER
+     // USER + ADMIN + EDITER
         React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 } },
           currentUser ? React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
             React.createElement('span', { style: { fontSize: 10, color: '#444', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, currentUser.email),
             profile && profile.role === 'admin' ? React.createElement('button', {
               onClick: function() { setPage('admin') },
               style: { padding: '4px 10px', background: 'transparent', border: '1px solid #CC000044', borderRadius: 6, color: '#CC0000', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' }
-            }, '⚙️') : null,
-            React.createElement('button', {
-              onClick: function() { supabase.auth.signOut() },
-              style: { padding: '4px 10px', background: 'transparent', border: '1px solid #2a2a2a', borderRadius: 6, color: '#555', fontSize: 10, cursor: 'pointer', fontFamily: 'inherit' }
-            }, 'Déco')
+            }, '⚙️') : null
           ) : null,
           React.createElement('button', {
             onClick: function() { setEditMode(function(v) { return !v }) },
