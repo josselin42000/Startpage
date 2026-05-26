@@ -359,7 +359,8 @@ export default function UserPage(props) {
     ),
 
     React.createElement('main', { style: { flex: 1, padding: 24 } },
-      editMode ? React.createElement('div', { style: { fontSize: 11, color: '#CC000088', letterSpacing: '0.06em', marginBottom: 14, padding: '6px 12px', background: '#1a0000', border: '1px solid #CC000033', borderRadius: 8, display: 'inline-block' } }, '✏️ Mode édition — cliquez × pour supprimer') : null,
+      editMode ? React.createElement('div', { style: { fontSize: 11, color: '#CC000088', letterSpacing: '0.06em', marginBottom: 14, padding: '6px 12px', background: '#1a0000', border: '1px solid #CC000033', borderRadius: 8, display: 'inline-block' } }, '✏️ Mode édition — × pour supprimer · + pour ajouter') : null,
+      React.createElement('div', { style: { fontSize: 10, fontWeight: 700, color: '#333', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14 } }, allGrid.length + ' liens'),
       React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 } },
 
         allGrid.map(function(item, i) {
@@ -378,7 +379,7 @@ export default function UserPage(props) {
               }, 'x') : null,
               React.createElement('div', {
                 onClick: function() { if (!editMode) setOpenFolder(t) },
-                style: { background: '#1a1a1a', border: '1px solid ' + (t.color || '#1a6fc4') + '33', borderRadius: 12, padding: '16px 10px 12px', cursor: editMode ? 'default' : 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
+                style: { background: '#1a1a1a', border: '1px solid ' + (t.color || '#1a6fc4') + '33', borderRadius: 12, padding: '16px 10px 12px', cursor: editMode ? 'default' : 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: editMode ? 0.7 : 1 },
                 onMouseEnter: function(e) { if (!editMode) e.currentTarget.style.background = '#222' },
                 onMouseLeave: function(e) { e.currentTarget.style.background = '#1a1a1a' }
               },
@@ -420,7 +421,7 @@ export default function UserPage(props) {
           )
         }),
 
-        React.createElement('div', {
+        editMode ? React.createElement('div', {
           onClick: function() { setAddToFolder(null); setAddModal(true) },
           style: { background: '#0f0f0f', border: '1px dashed #2a2a2a', borderRadius: 12, padding: '16px 10px 12px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: '#444' },
           onMouseEnter: function(e) { e.currentTarget.style.borderColor = '#CC0000'; e.currentTarget.style.color = '#CC0000'; e.currentTarget.style.background = '#0b0000' },
@@ -428,9 +429,9 @@ export default function UserPage(props) {
         },
           React.createElement('div', { style: { width: 50, height: 50, borderRadius: 12, background: '#161616', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, color: 'inherit' } }, '+'),
           React.createElement('div', { style: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'inherit' } }, 'Ajouter')
-        ),
+        ) : null,
 
-        React.createElement('div', {
+        editMode ? React.createElement('div', {
           onClick: function() { setAddFolderModal(true) },
           style: { background: '#0f0f0f', border: '1px dashed #1a6fc444', borderRadius: 12, padding: '16px 10px 12px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: '#1a6fc455' },
           onMouseEnter: function(e) { e.currentTarget.style.borderColor = '#1a6fc4'; e.currentTarget.style.color = '#1a6fc4'; e.currentTarget.style.background = '#001a2a' },
@@ -438,7 +439,7 @@ export default function UserPage(props) {
         },
           React.createElement('div', { style: { width: 50, height: 50, borderRadius: 12, background: '#161616', border: '1px solid #1a6fc433', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, color: 'inherit' } }, '📁'),
           React.createElement('div', { style: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'inherit' } }, 'Dossier')
-        )
+        ) : null
       )
     ),
 
