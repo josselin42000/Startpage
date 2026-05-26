@@ -13,6 +13,15 @@ function getInitials(name) {
 
 var EMOJIS_SMALL = ['🔗','🏠','⚡','📊','💼','🎙️','📷','🛒','🔧','🌱','🎬','📡','💡','🔌','🚗','🎯','💻','🗂️','📋','🔐','💰','📈','🎵','✅','🔍','⚙️','🏢','🚀','💎','🌐','🛠️']
 var COLORS_SMALL = ['#CC0000','#1a6fc4','#1a8f5c','#9b3ccf','#d97316','#0891b2','#374151','#b45309']
+
+var QL_KEY_PREFIX = 'userpage_ql_'
+var DEFAULT_QL = [
+  { name: 'Gmail', url: 'https://mail.google.com', icon: '📧' },
+  { name: 'Outlook', url: 'https://outlook.cloud.microsoft/', icon: '📨' },
+]
+function loadQL(slug) { try { var r = localStorage.getItem(QL_KEY_PREFIX + slug); return r ? JSON.parse(r) : DEFAULT_QL } catch(e) { return DEFAULT_QL } }
+function saveQL(slug, ql) { try { localStorage.setItem(QL_KEY_PREFIX + slug, JSON.stringify(ql)) } catch(e) {} }
+
 var WEATHER_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️'}
 var WEATHER_DAYS = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam']
 var ST_ETIENNE = { lat: 45.4397, lon: 4.3872 }
@@ -172,6 +181,9 @@ export default function UserPage(props) {
   var showToolsS = useState(false); var showTools = showToolsS[0]; var setShowTools = showToolsS[1]
   var editModeS = useState(false); var editMode = editModeS[0]; var setEditMode = editModeS[1]
   var googleSearchS = useState(''); var googleSearch = googleSearchS[0]; var setGoogleSearch = googleSearchS[1]
+  var qlS = useState([]); var quickLinks = qlS[0]; var setQuickLinks = qlS[1]
+  var qlEditS = useState(false); var qlEdit = qlEditS[0]; var setQlEdit = qlEditS[1]
+  var qlFormS = useState([]); var qlForm = qlFormS[0]; var setQlForm = qlFormS[1]
   var formS = useState({ name: '', url: '', icon: '🔗', color: '#CC0000' }); var form = formS[0]; var setForm = formS[1]
   var folderFormS = useState({ name: '', icon: '📁', color: '#1a6fc4', pin: '' }); var folderForm = folderFormS[0]; var setFolderForm = folderFormS[1]
   var folderPinS = useState({}); var folderPinUnlocked = folderPinS[0]; var setFolderPinUnlocked = folderPinS[1]
@@ -198,6 +210,7 @@ export default function UserPage(props) {
       if (res.error || !res.data) { setNotFound(true); setLoad(false); return }
       var p = res.data
       setPage(p)
+      setQuickLinks(loadQL(p.slug))
       if (!p.page_pin) setPageUnlocked(true)
       if (!p.ideas_pin) setIdeasUnlocked(true)
       var promises = []
@@ -316,21 +329,43 @@ export default function UserPage(props) {
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#080808' } },
 
     React.createElement('header', { style: { background: '#0a0a0a', borderBottom: '1px solid #1c1c1c', padding: '0 20px' } },
-      React.createElement('div', { style: { display: 'flex', alignItems: 'center', padding: '12px 0', gap: 12 } },
-        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 } },
-          React.createElement('div', { style: { width: 40, height: 40, borderRadius: '50%', background: (page.color || '#1a6fc4') + '22', border: '2px solid ' + (page.color || '#1a6fc4') + '66', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: page.avatar ? 20 : 13, fontWeight: 700, color: page.color || '#1a6fc4', flexShrink: 0 } }, page.avatar || getInitials(page.display_name)),
-          React.createElement('div', null,
-            React.createElement('div', { style: { fontSize: 13, fontWeight: 700, color: '#ddd' } }, page.display_name),
-            React.createElement('div', { style: { fontSize: 11, color: '#555' } }, greet + ', ' + firstName + ' !')
-          )
+
+      React.createElement('div', { style: { display: 'flex', alignItems: 'center', padding: '10px 0', gap: 10 } },
+
+        // GAUCHE : avatar + prénom + quick links
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' } },
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+            React.createElement('div', { style: { width: 38, height: 38, borderRadius: '50%', background: (page.color || '#1a6fc4') + '22', border: '2px solid ' + (page.color || '#1a6fc4') + '66', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: page.avatar ? 18 : 12, fontWeight: 700, color: page.color || '#1a6fc4', flexShrink: 0 } }, page.avatar || getInitials(page.display_name)),
+            React.createElement('div', null,
+              React.createElement('div', { style: { fontSize: 12, fontWeight: 700, color: '#ddd' } }, page.display_name),
+              React.createElement('div', { style: { fontSize: 10, color: '#555' } }, greet + ', ' + firstName + ' !')
+            )
+          ),
+          quickLinks.map(function(ql) {
+            return React.createElement('a', {
+              key: ql.name, href: ql.url, target: '_blank', rel: 'noopener noreferrer',
+              style: { display: 'flex', alignItems: 'center', gap: 5, background: '#141414', border: '1px solid #222', borderRadius: 7, padding: '5px 10px', textDecoration: 'none', color: '#ccc', fontSize: 12, fontWeight: 600 }
+            },
+              React.createElement('span', { style: { fontSize: 15 } }, ql.icon || '🔗'),
+              React.createElement('span', null, ql.name)
+            )
+          }),
+          editMode ? React.createElement('button', {
+            onClick: function() { setQlForm(quickLinks.slice()); setQlEdit(true) },
+            style: { background: 'transparent', border: '1px dashed #333', borderRadius: 7, padding: '5px 10px', color: '#444', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }
+          }, '✏️') : null
         ),
+
+        // CENTRE : titre
         React.createElement('div', { style: { flex: 1, display: 'flex', justifyContent: 'center' } },
           React.createElement('h1', { style: { fontSize: 20, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', display: 'flex', alignItems: 'center' } },
             React.createElement('span', { style: { color: '#fff' } }, 'GROUPE\u00a0'),
             React.createElement('span', { style: { color: '#CC0000' } }, 'LINEAR')
           )
         ),
-        React.createElement('div', { style: { flexShrink: 0, width: 120, display: 'flex', justifyContent: 'flex-end' } },
+
+        // DROITE : bouton éditer
+        React.createElement('div', { style: { flexShrink: 0, display: 'flex', justifyContent: 'flex-end' } },
           React.createElement('button', {
             onClick: function() { setEditMode(function(v) { return !v }) },
             style: { padding: '5px 14px', background: editMode ? '#1a0000' : 'transparent', border: editMode ? '1px solid #CC0000' : '1px solid #2a2a2a', borderRadius: 7, color: editMode ? '#CC0000' : '#555', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' }
@@ -338,6 +373,7 @@ export default function UserPage(props) {
         )
       ),
 
+      // ROW 2 : météo + horloges
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '8px 0 12px', flexWrap: 'wrap' } },
         weather ? React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 6, background: '#141414', border: '1px solid #222', borderRadius: 8, padding: '5px 12px' } },
           React.createElement('span', { style: { fontSize: 16 } }, WEATHER_ICONS[weather.code] || '🌡️'),
@@ -366,6 +402,7 @@ export default function UserPage(props) {
       )
     ),
 
+    // BARRE GOOGLE SEARCH
     React.createElement('div', { style: { background: '#0d0d0d', borderBottom: '1px solid #181818', padding: '10px 20px' } },
       React.createElement('form', {
         onSubmit: function(e) {
@@ -474,6 +511,30 @@ export default function UserPage(props) {
       )
     ),
 
+    // MODAL LIENS RAPIDES
+    qlEdit ? React.createElement('div', {
+      onClick: function(e) { if (e.target === e.currentTarget) setQlEdit(false) },
+      style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }
+    },
+      React.createElement('div', { style: { background: '#111', border: '1px solid #252525', borderRadius: 16, padding: 24, width: '100%', maxWidth: 400 } },
+        React.createElement('h2', { style: { fontSize: 13, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 18 } }, '🔗 Liens rapides'),
+        qlForm.map(function(ql, i) {
+          return React.createElement('div', { key: i, style: { display: 'flex', gap: 6, marginBottom: 8 } },
+            React.createElement('input', { value: ql.icon || '', onChange: function(e) { var f = qlForm.slice(); f[i] = Object.assign({}, f[i], { icon: e.target.value }); setQlForm(f) }, placeholder: '🔗', style: { width: 40, background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 6, padding: '7px 4px', color: '#ddd', fontSize: 18, fontFamily: 'inherit', outline: 'none', textAlign: 'center' } }),
+            React.createElement('input', { value: ql.name, onChange: function(e) { var f = qlForm.slice(); f[i] = Object.assign({}, f[i], { name: e.target.value }); setQlForm(f) }, placeholder: 'Nom', style: { flex: 1, background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 6, padding: '7px 10px', color: '#ddd', fontSize: 12, fontFamily: 'inherit', outline: 'none' } }),
+            React.createElement('input', { value: ql.url, onChange: function(e) { var f = qlForm.slice(); f[i] = Object.assign({}, f[i], { url: e.target.value }); setQlForm(f) }, placeholder: 'https://...', style: { flex: 2, background: '#0a0a0a', border: '1px solid #2a2a2a', borderRadius: 6, padding: '7px 10px', color: '#ddd', fontSize: 12, fontFamily: 'inherit', outline: 'none' } }),
+            React.createElement('button', { onClick: function() { setQlForm(qlForm.filter(function(_, j) { return j !== i })) }, style: { background: '#CC0000', border: 'none', borderRadius: 6, color: '#fff', fontSize: 13, cursor: 'pointer', padding: '0 10px', fontWeight: 700 } }, 'x')
+          )
+        }),
+        React.createElement('button', { onClick: function() { setQlForm(qlForm.concat([{ name: '', url: '', icon: '🔗' }])) }, style: { width: '100%', padding: 8, background: 'transparent', border: '1px dashed #333', borderRadius: 8, color: '#555', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14 } }, '+ Ajouter'),
+        React.createElement('div', { style: { display: 'flex', gap: 10 } },
+          React.createElement('button', { onClick: function() { setQlEdit(false) }, style: { flex: 1, padding: 10, background: 'transparent', border: '1px solid #252525', borderRadius: 8, color: '#555', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' } }, 'Annuler'),
+          React.createElement('button', { onClick: function() { saveQL(page.slug, qlForm); setQuickLinks(qlForm); setQlEdit(false) }, style: { flex: 2, padding: 10, background: '#CC0000', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' } }, 'Enregistrer')
+        )
+      )
+    ) : null,
+
+    // MODAL PIN IDÉES
     ideasPinModal ? React.createElement('div', {
       onClick: function(e) { if (e.target === e.currentTarget) setIdeasPinModal(false) },
       style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }
@@ -481,6 +542,7 @@ export default function UserPage(props) {
       React.createElement(PinGate, { correctPin: page.ideas_pin, onUnlock: function() { setIdeasUnlocked(true); setIdeasPinModal(false); setShowIdeas(true) }, icon: '💡', title: 'Boite à idées protégée', desc: 'Entrez le code pour accéder' })
     ) : null,
 
+    // MODAL AJOUT LIEN
     addModal ? React.createElement('div', {
       onClick: function(e) { if (e.target === e.currentTarget) { setAddModal(false); setAddToFolder(null) } },
       style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }
@@ -502,6 +564,7 @@ export default function UserPage(props) {
       )
     ) : null,
 
+    // MODAL CRÉER DOSSIER
     addFolderModal ? React.createElement('div', {
       onClick: function(e) { if (e.target === e.currentTarget) setAddFolderModal(false) },
       style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }
