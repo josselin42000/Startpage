@@ -1,7 +1,7 @@
+import { StickyInlineWidget } from './StickyNotes'
 import React from 'react'
 import Tile from './Tile'
 import FolderTile from './FolderTile'
-import { StickyInlineWidget } from './StickyNotes'
 
 export default function Grid(props) {
   var tiles = props.tiles
@@ -50,15 +50,6 @@ export default function Grid(props) {
   })
 
   var stickiesBtn = React.createElement(StickyInlineWidget, { key: 'stickies' })
-    key: 'stickies', onClick: onOpenStickies,
-    style: { background: '#1a1a1a', border: '1px solid #b4530933', borderRadius: 12, padding: '16px 10px 12px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
-    onMouseEnter: function(e) { e.currentTarget.style.background = '#1a1200'; e.currentTarget.style.borderColor = '#b4530966' },
-    onMouseLeave: function(e) { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.borderColor = '#b4530933' },
-  },
-    React.createElement('div', { style: { width: 50, height: 50, borderRadius: 12, background: '#b4530918', border: '1px solid #b4530944', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 } }, '🗒️'),
-    React.createElement('div', { style: { fontSize: 13, fontWeight: 700, color: '#ddd' } }, 'Notes'),
-    React.createElement('div', { style: { fontSize: 10, color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 8px', border: '1px solid #2a2a2a', borderRadius: 20 } }, 'Rapides')
-  )
 
   var ideasBtn = React.createElement('div', {
     key: 'ideas', onClick: onOpenIdeas,
