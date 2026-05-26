@@ -169,6 +169,7 @@ export default function UserPage(props) {
   var openFolderS = useState(null); var openFolder = openFolderS[0]; var setOpenFolder = openFolderS[1]
   var showIdeasS = useState(false); var showIdeas = showIdeasS[0]; var setShowIdeas = showIdeasS[1]
   var showToolsS = useState(false); var showTools = showToolsS[0]; var setShowTools = showToolsS[1]
+  var editModeS = useState(false); var editMode = editModeS[0]; var setEditMode = editModeS[1]
   var formS = useState({ name: '', url: '', icon: '🔗', color: '#CC0000' }); var form = formS[0]; var setForm = formS[1]
   var folderFormS = useState({ name: '', icon: '📁', color: '#1a6fc4', pin: '' }); var folderForm = folderFormS[0]; var setFolderForm = folderFormS[1]
   var folderPinS = useState({}); var folderPinUnlocked = folderPinS[0]; var setFolderPinUnlocked = folderPinS[1]
@@ -245,6 +246,16 @@ export default function UserPage(props) {
     })
   }
 
+  function handleDeleteFolder(folderId) {
+    if (!confirm('Supprimer ce dossier et son contenu ?')) return
+    supabase.from('user_page_tiles').delete().eq('folder_id', folderId).then(function() {
+      supabase.from('user_page_tiles').delete().eq('id', folderId).then(function() {
+        setFolders(function(prev) { return prev.filter(function(f) { return f.id !== folderId }) })
+        setFolderTiles(function(prev) { var u = Object.assign({}, prev); delete u[folderId]; return u })
+      })
+    })
+  }
+
   function handleCreateFolder() {
     if (!folderForm.name.trim() || !page) return
     var data = { page_id: page.id, name: folderForm.name.trim(), icon: folderForm.icon, color: folderForm.color, type: 'folder', url: '#', position: 0, folder_pin: folderForm.pin.trim() }
@@ -316,7 +327,12 @@ export default function UserPage(props) {
             React.createElement('span', { style: { color: '#CC0000' } }, 'LINEAR')
           )
         ),
-        React.createElement('div', { style: { flexShrink: 0, width: 120 } })
+        React.createElement('div', { style: { flexShrink: 0, width: 120, display: 'flex', justifyContent: 'flex-end' } },
+          React.createElement('button', {
+            onClick: function() { setEditMode(function(v) { return !v }) },
+            style: { padding: '5px 14px', background: editMode ? '#1a0000' : 'transparent', border: editMode ? '1px solid #CC0000' : '1px solid #2a2a2a', borderRadius: 7, color: editMode ? '#CC0000' : '#555', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' }
+          }, editMode ? 'Terminer' : 'Éditer')
+        )
       ),
 
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '8px 0 12px', flexWrap: 'wrap' } },
@@ -343,21 +359,37 @@ export default function UserPage(props) {
     ),
 
     React.createElement('main', { style: { flex: 1, padding: 24 } },
-      React.createElement('div', { style: { fontSize: 10, fontWeight: 700, color: '#333', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14 } }, allGrid.length + ' liens'),
+      editMode ? React.createElement('div', { style: { fontSize: 11, color: '#CC000088', letterSpacing: '0.06em', marginBottom: 14, padding: '6px 12px', background: '#1a0000', border: '1px solid #CC000033', borderRadius: 8, display: 'inline-block' } }, '✏️ Mode édition — cliquez × pour supprimer') : null,
       React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 } },
 
         allGrid.map(function(item, i) {
           var t = item.tile
 
-          // NOTES RAPIDES — widget inline Supabase
           if (item.type === 'stickies') {
             return React.createElement(MemberStickyWidget, { key: '__stickies__', pageId: page.id })
           }
 
-          var isFolder = item.type === 'folder' || item.type === 'tools' || item.type === 'ideas'
+          if (item.type === 'folder') {
+            var childCount = folderTiles[t.id] ? folderTiles[t.id].length : 0
+            return React.createElement('div', { key: t.id, style: { position: 'relative' } },
+              editMode ? React.createElement('button', {
+                onClick: function() { handleDeleteFolder(t.id) },
+                style: { position: 'absolute', top: -6, right: -6, width: 20, height: 20, background: '#CC0000', border: '2px solid #080808', borderRadius: '50%', color: '#fff', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, zIndex: 10 }
+              }, 'x') : null,
+              React.createElement('div', {
+                onClick: function() { if (!editMode) setOpenFolder(t) },
+                style: { background: '#1a1a1a', border: '1px solid ' + (t.color || '#1a6fc4') + '33', borderRadius: 12, padding: '16px 10px 12px', cursor: editMode ? 'default' : 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
+                onMouseEnter: function(e) { if (!editMode) e.currentTarget.style.background = '#222' },
+                onMouseLeave: function(e) { e.currentTarget.style.background = '#1a1a1a' }
+              },
+                React.createElement('div', { style: { width: 50, height: 50, borderRadius: 12, background: (t.color || '#1a6fc4') + '18', border: '1px solid ' + (t.color || '#1a6fc4') + '44', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 } }, t.icon || '📁'),
+                React.createElement('div', { style: { fontSize: 12, fontWeight: 700, color: '#ddd' } }, t.name),
+                React.createElement('div', { style: { fontSize: 9, color: '#555', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 8px', border: '1px solid #2a2a2a', borderRadius: 20 } }, childCount + ' lien' + (childCount > 1 ? 's' : ''))
+              )
+            )
+          }
 
-          if (isFolder) {
-            var childCount = item.type === 'folder' ? (folderTiles[t.id] ? folderTiles[t.id].length : 0) : item.type === 'tools' ? 6 : 0
+          if (item.type === 'tools' || item.type === 'ideas') {
             return React.createElement('div', {
               key: t.id,
               onClick: function() {
@@ -366,22 +398,24 @@ export default function UserPage(props) {
                   if (page.ideas_pin && !ideasUnlocked) setIdeasPinModal(true)
                   else setShowIdeas(true)
                 }
-                else setOpenFolder(t)
               },
               style: { background: '#1a1a1a', border: '1px solid ' + (t.color || '#CC0000') + '33', borderRadius: 12, padding: '16px 10px 12px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
               onMouseEnter: function(e) { e.currentTarget.style.background = '#222' },
               onMouseLeave: function(e) { e.currentTarget.style.background = '#1a1a1a' }
             },
-              React.createElement('div', { style: { width: 50, height: 50, borderRadius: 12, background: (t.color || '#CC0000') + '18', border: '1px solid ' + (t.color || '#CC0000') + '44', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 } }, t.icon || '📁'),
+              React.createElement('div', { style: { width: 50, height: 50, borderRadius: 12, background: (t.color || '#CC0000') + '18', border: '1px solid ' + (t.color || '#CC0000') + '44', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 } }, t.icon),
               React.createElement('div', { style: { fontSize: 12, fontWeight: 700, color: '#ddd' } }, t.name),
-              React.createElement('div', { style: { fontSize: 9, color: '#555', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 8px', border: '1px solid #2a2a2a', borderRadius: 20 } },
-                item.type === 'ideas' && page.ideas_pin && !ideasUnlocked ? '🔐 Protégé' : childCount + ' lien' + (childCount > 1 ? 's' : '')
+              React.createElement('div', { style: { fontSize: 9, color: item.type === 'ideas' && page.ideas_pin && !ideasUnlocked ? '#b45309' : '#555', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 8px', border: '1px solid #2a2a2a', borderRadius: 20 } },
+                item.type === 'ideas' && page.ideas_pin && !ideasUnlocked ? '🔐 Protégé' : item.type === 'tools' ? '6 liens' : ''
               )
             )
           }
 
           return React.createElement('div', { key: t.id, style: { position: 'relative' } },
-            item.type === 'user' ? React.createElement('button', { onClick: function() { handleDeleteTile(t.id, null) }, style: { position: 'absolute', top: -6, right: -6, width: 20, height: 20, background: '#CC0000', border: '2px solid #080808', borderRadius: '50%', color: '#fff', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, zIndex: 10 } }, 'x') : null,
+            editMode && item.type === 'user' ? React.createElement('button', {
+              onClick: function() { handleDeleteTile(t.id, null) },
+              style: { position: 'absolute', top: -6, right: -6, width: 20, height: 20, background: '#CC0000', border: '2px solid #080808', borderRadius: '50%', color: '#fff', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, zIndex: 10 }
+            }, 'x') : null,
             React.createElement(Tile, { tile: t, editMode: false, index: i })
           )
         }),
