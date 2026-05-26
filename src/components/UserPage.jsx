@@ -43,7 +43,7 @@ function WeatherTooltip(props) {
   return React.createElement('div', {
     style: { position: 'absolute', top: 50, left: '50%', transform: 'translateX(-50%)', background: '#111', border: '1px solid #252525', borderRadius: 12, padding: 14, zIndex: 200, minWidth: 220, boxShadow: '0 8px 32px rgba(0,0,0,0.8)' }
   },
-    React.createElement('div', { style: { fontSize: 10, fontWeight: 700, color: '#555', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 } }, 'Météo · 7 jours'),
+    React.createElement('div', { style: { fontSize: 10, fontWeight: 700, color: '#555', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 } }, 'Météo locale · 7j'),
     data.daily.time.map(function(dateStr, i) {
       var d = new Date(dateStr)
       return React.createElement('div', { key: dateStr, style: { display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: i < 6 ? '1px solid #1a1a1a' : 'none' } },
@@ -68,7 +68,7 @@ function PinGate(props) {
     React.createElement('div', { style: { background: '#111', border: '1px solid ' + (err ? '#CC0000' : '#1e1e1e'), borderRadius: 16, padding: 28, width: '100%', maxWidth: 340, textAlign: 'center' } },
       React.createElement('div', { style: { fontSize: 32, marginBottom: 12 } }, props.icon || '🔐'),
       React.createElement('div', { style: { fontSize: 14, fontWeight: 700, color: '#ddd', marginBottom: 6 } }, props.title || 'Accès protégé'),
-      React.createElement('div', { style: { fontSize: 12, color: '#444', marginBottom: 20 } }, props.desc || 'Entrez le code d\'accès'),
+      React.createElement('div', { style: { fontSize: 12, color: '#444', marginBottom: 20 } }, props.desc || "Entrez le code d'accès"),
       React.createElement('input', { type: 'password', value: pin, onChange: function(e) { setPin(e.target.value) }, onKeyDown: function(e) { if (e.key === 'Enter') check() }, placeholder: 'Code PIN', autoFocus: true, style: { width: '100%', background: '#0a0a0a', border: '1px solid ' + (err ? '#CC0000' : '#2a2a2a'), borderRadius: 8, padding: '11px 14px', color: '#e0e0e0', fontSize: 15, fontFamily: 'inherit', outline: 'none', textAlign: 'center', letterSpacing: '0.2em', marginBottom: 12 } }),
       err ? React.createElement('div', { style: { fontSize: 12, color: '#CC0000', marginBottom: 8 } }, 'Code incorrect') : null,
       React.createElement('button', { onClick: check, style: { width: '100%', padding: 12, background: '#CC0000', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' } }, 'Accéder')
@@ -171,6 +171,7 @@ export default function UserPage(props) {
   var showIdeasS = useState(false); var showIdeas = showIdeasS[0]; var setShowIdeas = showIdeasS[1]
   var showToolsS = useState(false); var showTools = showToolsS[0]; var setShowTools = showToolsS[1]
   var editModeS = useState(false); var editMode = editModeS[0]; var setEditMode = editModeS[1]
+  var googleSearchS = useState(''); var googleSearch = googleSearchS[0]; var setGoogleSearch = googleSearchS[1]
   var formS = useState({ name: '', url: '', icon: '🔗', color: '#CC0000' }); var form = formS[0]; var setForm = formS[1]
   var folderFormS = useState({ name: '', icon: '📁', color: '#1a6fc4', pin: '' }); var folderForm = folderFormS[0]; var setFolderForm = folderFormS[1]
   var folderPinS = useState({}); var folderPinUnlocked = folderPinS[0]; var setFolderPinUnlocked = folderPinS[1]
@@ -281,7 +282,7 @@ export default function UserPage(props) {
     React.createElement('div', { style: { fontSize: 14, color: '#444' } }, 'Page introuvable'),
     React.createElement('a', { href: '/', style: { fontSize: 12, color: '#CC0000', textDecoration: 'none' } }, 'Retour')
   )
-  if (page.page_pin && !pageUnlocked) return React.createElement(PinGate, { correctPin: page.page_pin, onUnlock: function() { setPageUnlocked(true) }, icon: page.avatar || '🔐', title: 'Espace de ' + page.display_name, desc: 'Entrez votre code d\'accès' })
+  if (page.page_pin && !pageUnlocked) return React.createElement(PinGate, { correctPin: page.page_pin, onUnlock: function() { setPageUnlocked(true) }, icon: page.avatar || '🔐', title: 'Espace de ' + page.display_name, desc: "Entrez votre code d'accès" })
   if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setShowIdeas(false) }, pageId: page ? page.id : null })
   if (showTools) return React.createElement(UserFolder, { onBack: function() { setShowTools(false) } })
 
@@ -338,9 +339,7 @@ export default function UserPage(props) {
       ),
 
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '8px 0 12px', flexWrap: 'wrap' } },
-      weather ? React.createElement('div', {
-          style: { display: 'flex', alignItems: 'center', gap: 6, background: '#141414', border: '1px solid #222', borderRadius: 8, padding: '5px 12px' }
-        },
+        weather ? React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 6, background: '#141414', border: '1px solid #222', borderRadius: 8, padding: '5px 12px' } },
           React.createElement('span', { style: { fontSize: 16 } }, WEATHER_ICONS[weather.code] || '🌡️'),
           React.createElement('span', { style: { fontSize: 14, fontWeight: 700, color: '#ddd' } }, weather.temp + 'C')
         ) : null,
@@ -354,7 +353,7 @@ export default function UserPage(props) {
           React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'France'),
           frHover && weather ? React.createElement(WeatherTooltip, { data: weather }) : null
         ),
-    page.show_clock_cn ? React.createElement('div', { style: { width: 1, height: 24, background: '#1c1c1c' } }) : null,
+        page.show_clock_cn ? React.createElement('div', { style: { width: 1, height: 24, background: '#1c1c1c' } }) : null,
         page.show_clock_cn ? React.createElement('div', {
           style: { display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', cursor: 'default' },
           onMouseEnter: function() { setCnHover(true) },
@@ -366,6 +365,30 @@ export default function UserPage(props) {
         ) : null
       )
     ),
+
+    React.createElement('div', { style: { background: '#0d0d0d', borderBottom: '1px solid #181818', padding: '10px 20px' } },
+      React.createElement('form', {
+        onSubmit: function(e) {
+          e.preventDefault()
+          if (!googleSearch.trim()) return
+          window.open('https://www.google.com/search?q=' + encodeURIComponent(googleSearch.trim()), '_blank')
+          setGoogleSearch('')
+        },
+        style: { display: 'flex', alignItems: 'center' }
+      },
+        React.createElement('input', {
+          value: googleSearch,
+          onChange: function(e) { setGoogleSearch(e.target.value) },
+          placeholder: '🔍  Rechercher sur Google...',
+          style: { flex: 1, background: '#161616', border: '1px solid #2a2a2a', borderRight: 'none', borderRadius: '8px 0 0 8px', padding: '9px 16px', color: '#ddd', fontSize: 13, fontFamily: 'inherit', outline: 'none' }
+        }),
+        React.createElement('button', {
+          type: 'submit',
+          style: { background: '#CC0000', border: 'none', borderRadius: '0 8px 8px 0', padding: '9px 20px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }
+        }, 'Go')
+      )
+    ),
+
     React.createElement('main', { style: { flex: 1, padding: 24 } },
       editMode ? React.createElement('div', { style: { fontSize: 11, color: '#CC000088', letterSpacing: '0.06em', marginBottom: 14, padding: '6px 12px', background: '#1a0000', border: '1px solid #CC000033', borderRadius: 8, display: 'inline-block' } }, '✏️ Mode édition — × pour supprimer · + pour ajouter') : null,
       React.createElement('div', { style: { fontSize: 10, fontWeight: 700, color: '#333', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14 } }, allGrid.length + ' liens'),
