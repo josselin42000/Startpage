@@ -39,9 +39,9 @@ function WeatherTooltip(props) {
   var data = props.data
   if (!data || !data.daily) return null
   return React.createElement('div', {
-    style: { position: 'absolute', top: 50, left: '50%', transform: 'translateX(-50%)', background: '#111', border: '1px solid #252525', borderRadius: 12, padding: 14, zIndex: 200, minWidth: 220, boxShadow: '0 8px 32px rgba(0,0,0,0.8)' }
+    style: { position: 'absolute', top: 52, left: '50%', transform: 'translateX(-50%)', background: '#111', border: '1px solid #252525', borderRadius: 12, padding: 14, zIndex: 200, minWidth: 220, boxShadow: '0 8px 32px rgba(0,0,0,0.8)' }
   },
-    React.createElement('div', { style: { fontSize: 10, fontWeight: 700, color: '#555', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 } }, 'Météo Saint-Étienne · 7j'),
+    React.createElement('div', { style: { fontSize: 10, fontWeight: 700, color: '#555', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 } }, 'Météo · 7 jours'),
     data.daily.time.map(function(dateStr, i) {
       var d = new Date(dateStr)
       return React.createElement('div', { key: dateStr, style: { display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: i < 6 ? '1px solid #1a1a1a' : 'none' } },
@@ -88,7 +88,7 @@ function UserFolder(props) {
 
   if (active) {
     return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', height: '100vh', background: '#080808' } },
-      React.createElement('div', { style: { padding: '10px 16px', background: '#0d0d0d', borderBottom: '1px solid #1a1a1a', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 } },
+      React.createElement('div', { style: { padding: '10px 16px', background: '#0d0d0d', borderBottom: '1px solid #1a1a1a', display: 'flex', alignItems: 'center', gap: 10 } },
         React.createElement('button', { onClick: function() { setActive(null) }, style: { background: 'transparent', border: '1px solid #2a2a2a', borderRadius: 6, color: '#aaa', fontSize: 12, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit' } }, '<- Outils'),
         React.createElement('span', { style: { fontSize: 13, color: '#ccc', fontWeight: 600 } }, active.name),
         React.createElement('a', { href: active.url, target: '_blank', rel: 'noopener noreferrer', style: { marginLeft: 'auto', fontSize: 11, color: '#555', textDecoration: 'none', border: '1px solid #222', borderRadius: 5, padding: '4px 10px' } }, 'Ouvrir dans onglet')
@@ -129,7 +129,6 @@ function UserCustomFolder(props) {
   var folder = props.folder
   var tiles = props.tiles
   var onBack = props.onBack
-  var canAdd = props.canAdd
   var onAddTile = props.onAddTile
   var onDeleteTile = props.onDeleteTile
 
@@ -138,19 +137,26 @@ function UserCustomFolder(props) {
       React.createElement('button', { onClick: onBack, style: { background: 'transparent', border: '1px solid #2a2a2a', borderRadius: 8, color: '#aaa', fontSize: 13, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' } }, '<- Retour'),
       React.createElement('span', { style: { fontSize: 20 } }, folder.icon || '📁'),
       React.createElement('h1', { style: { fontSize: 15, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em' } }, folder.name),
-      canAdd ? React.createElement('button', { onClick: onAddTile, style: { marginLeft: 'auto', padding: '6px 16px', background: '#CC0000', border: 'none', borderRadius: 8, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' } }, '+ Ajouter') : null
+      React.createElement('button', { onClick: onAddTile, style: { marginLeft: 'auto', padding: '6px 16px', background: '#CC0000', border: 'none', borderRadius: 8, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' } }, '+ Ajouter')
     ),
     React.createElement('main', { style: { flex: 1, padding: 24 } },
-      tiles.length === 0
-        ? React.createElement('div', { style: { textAlign: 'center', paddingTop: 60, color: '#333', fontSize: 13 } }, 'Dossier vide — cliquez + Ajouter')
-        : React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 } },
-            tiles.map(function(t, i) {
-              return React.createElement('div', { key: t.id, style: { position: 'relative' } },
-                canAdd ? React.createElement('button', { onClick: function() { onDeleteTile(t.id) }, style: { position: 'absolute', top: -6, right: -6, width: 20, height: 20, background: '#CC0000', border: '2px solid #080808', borderRadius: '50%', color: '#fff', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, zIndex: 10 } }, 'x') : null,
-                React.createElement(Tile, { tile: t, editMode: false, index: i })
-              )
-            })
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12 } },
+        tiles.map(function(t, i) {
+          return React.createElement('div', { key: t.id, style: { position: 'relative' } },
+            React.createElement('button', { onClick: function() { onDeleteTile(t.id) }, style: { position: 'absolute', top: -6, right: -6, width: 20, height: 20, background: '#CC0000', border: '2px solid #080808', borderRadius: '50%', color: '#fff', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, zIndex: 10 } }, 'x'),
+            React.createElement(Tile, { tile: t, editMode: false, index: i })
           )
+        }),
+        React.createElement('div', {
+          onClick: onAddTile,
+          style: { background: '#0f0f0f', border: '1px dashed #2a2a2a', borderRadius: 12, padding: '16px 10px 12px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: '#444' },
+          onMouseEnter: function(e) { e.currentTarget.style.borderColor = '#CC0000'; e.currentTarget.style.color = '#CC0000'; e.currentTarget.style.background = '#0b0000' },
+          onMouseLeave: function(e) { e.currentTarget.style.borderColor = '#2a2a2a'; e.currentTarget.style.color = '#444'; e.currentTarget.style.background = '#0f0f0f' }
+        },
+          React.createElement('div', { style: { width: 50, height: 50, borderRadius: 12, background: '#161616', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, color: 'inherit' } }, '+'),
+          React.createElement('div', { style: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'inherit' } }, 'Ajouter')
+        )
+      )
     )
   )
 }
@@ -166,6 +172,7 @@ export default function UserPage(props) {
   var notFoundS = useState(false); var notFound = notFoundS[0]; var setNotFound = notFoundS[1]
   var pageUnlockedS = useState(false); var pageUnlocked = pageUnlockedS[0]; var setPageUnlocked = pageUnlockedS[1]
   var ideasUnlockedS = useState(false); var ideasUnlocked = ideasUnlockedS[0]; var setIdeasUnlocked = ideasUnlockedS[1]
+  var ideasPinModalS = useState(false); var ideasPinModal = ideasPinModalS[0]; var setIdeasPinModal = ideasPinModalS[1]
   var addModalS = useState(false); var addModal = addModalS[0]; var setAddModal = addModalS[1]
   var addFolderModalS = useState(false); var addFolderModal = addFolderModalS[0]; var setAddFolderModal = addFolderModalS[1]
   var addToFolderS = useState(null); var addToFolder = addToFolderS[0]; var setAddToFolder = addToFolderS[1]
@@ -283,7 +290,16 @@ export default function UserPage(props) {
     React.createElement('div', { style: { fontSize: 14, color: '#444' } }, 'Page introuvable'),
     React.createElement('a', { href: '/', style: { fontSize: 12, color: '#CC0000', textDecoration: 'none' } }, 'Retour')
   )
-  if (page.page_pin && !pageUnlocked) return React.createElement(PinGate, { correctPin: page.page_pin, onUnlock: function() { setPageUnlocked(true) }, icon: page.avatar || '🔐', title: 'Espace de ' + page.display_name, desc: 'Entrez votre code d\'accès' })
+
+  // PIN PAGE — plein écran centré
+  if (page.page_pin && !pageUnlocked) return React.createElement(PinGate, {
+    correctPin: page.page_pin,
+    onUnlock: function() { setPageUnlocked(true) },
+    icon: page.avatar || '🔐',
+    title: 'Espace de ' + page.display_name,
+    desc: 'Entrez votre code d\'accès'
+  })
+
   if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setShowIdeas(false) } })
   if (showTools) return React.createElement(UserFolder, { onBack: function() { setShowTools(false) } })
 
@@ -298,7 +314,6 @@ export default function UserPage(props) {
       folder: openFolder,
       tiles: folderTiles[openFolder.id] || [],
       onBack: function() { setOpenFolder(null) },
-      canAdd: true,
       onAddTile: function() { setAddToFolder(openFolder.id); setAddModal(true) },
       onDeleteTile: function(id) { handleDeleteTile(id, openFolder.id) }
     })
@@ -318,7 +333,6 @@ export default function UserPage(props) {
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#080808' } },
 
     React.createElement('header', { style: { background: '#0a0a0a', borderBottom: '1px solid #1c1c1c', padding: '0 20px' } },
-
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', padding: '12px 0', gap: 12 } },
         React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 } },
           React.createElement('div', { style: { width: 40, height: 40, borderRadius: '50%', background: (page.color || '#1a6fc4') + '22', border: '2px solid ' + (page.color || '#1a6fc4') + '66', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: page.avatar ? 20 : 13, fontWeight: 700, color: page.color || '#1a6fc4', flexShrink: 0 } },
@@ -347,7 +361,7 @@ export default function UserPage(props) {
         React.createElement('div', {
           style: { display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', cursor: 'default' },
           onMouseEnter: function() { setFrHover(true) },
-          onMouseLeave: function() { setFrHover(false) },
+          onMouseLeave: function() { setFrHover(false) }
         },
           React.createElement('span', { style: { fontSize: 22, fontWeight: 700, color: '#fff', fontVariantNumeric: 'tabular-nums' } }, clockFr),
           React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'France'),
@@ -373,22 +387,21 @@ export default function UserPage(props) {
               key: t.id,
               onClick: function() {
                 if (item.type === 'tools') setShowTools(true)
-                else if (item.type === 'ideas') { if (!page.ideas_pin || ideasUnlocked) setShowIdeas(true) }
+                else if (item.type === 'ideas') {
+                  if (page.ideas_pin && !ideasUnlocked) setIdeasPinModal(true)
+                  else setShowIdeas(true)
+                }
                 else setOpenFolder(t)
               },
               style: { background: '#1a1a1a', border: '1px solid ' + (t.color || '#CC0000') + '33', borderRadius: 12, padding: '16px 10px 12px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
               onMouseEnter: function(e) { e.currentTarget.style.background = '#222' },
               onMouseLeave: function(e) { e.currentTarget.style.background = '#1a1a1a' }
             },
-              item.type === 'ideas' && page.ideas_pin && !ideasUnlocked
-                ? React.createElement('div', { onClick: function(e) { e.stopPropagation() }, style: { width: '100%' } },
-                    React.createElement(PinGate, { mini: true, correctPin: page.ideas_pin, onUnlock: function() { setIdeasUnlocked(true) }, icon: '💡', title: '', desc: 'Code idées' })
-                  )
-                : React.createElement(React.Fragment, null,
-                    React.createElement('div', { style: { width: 50, height: 50, borderRadius: 12, background: (t.color || '#CC0000') + '18', border: '1px solid ' + (t.color || '#CC0000') + '44', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 } }, t.icon || '📁'),
-                    React.createElement('div', { style: { fontSize: 12, fontWeight: 700, color: '#ddd' } }, t.name),
-                    React.createElement('div', { style: { fontSize: 9, color: '#555', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 8px', border: '1px solid #2a2a2a', borderRadius: 20 } }, childCount + ' lien' + (childCount > 1 ? 's' : ''))
-                  )
+              React.createElement('div', { style: { width: 50, height: 50, borderRadius: 12, background: (t.color || '#CC0000') + '18', border: '1px solid ' + (t.color || '#CC0000') + '44', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 } }, t.icon || '📁'),
+              React.createElement('div', { style: { fontSize: 12, fontWeight: 700, color: '#ddd' } }, t.name),
+              React.createElement('div', { style: { fontSize: 9, color: '#555', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 8px', border: '1px solid #2a2a2a', borderRadius: 20 } },
+                item.type === 'ideas' && page.ideas_pin && !ideasUnlocked ? '🔐 Protégé' : childCount + ' lien' + (childCount > 1 ? 's' : '')
+              )
             )
           }
           return React.createElement('div', { key: t.id, style: { position: 'relative' } },
@@ -419,6 +432,19 @@ export default function UserPage(props) {
       )
     ),
 
+    // MODAL PIN IDÉES (popup au clic)
+    ideasPinModal ? React.createElement('div', {
+      onClick: function(e) { if (e.target === e.currentTarget) setIdeasPinModal(false) },
+      style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }
+    },
+      React.createElement(PinGate, {
+        correctPin: page.ideas_pin,
+        onUnlock: function() { setIdeasUnlocked(true); setIdeasPinModal(false); setShowIdeas(true) },
+        icon: '💡', title: 'Boite à idées protégée', desc: 'Entrez le code pour accéder'
+      })
+    ) : null,
+
+    // MODAL AJOUT LIEN
     addModal ? React.createElement('div', {
       onClick: function(e) { if (e.target === e.currentTarget) { setAddModal(false); setAddToFolder(null) } },
       style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }
@@ -440,6 +466,7 @@ export default function UserPage(props) {
       )
     ) : null,
 
+    // MODAL CRÉER DOSSIER
     addFolderModal ? React.createElement('div', {
       onClick: function(e) { if (e.target === e.currentTarget) setAddFolderModal(false) },
       style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }
