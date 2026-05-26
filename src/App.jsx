@@ -12,6 +12,7 @@ import CantonWeatherTooltip from './components/CantonWeatherTooltip'
 import IdeasPage from './components/IdeasPage'
 import AuthPage from './components/AuthPage'
 import AdminPage from './components/AdminPage'
+import StickyNotes from './components/StickyNotes'
 
 var EMOJIS_FOLDER = ['📁','📂','⭐','🔴','🟠','🟡','🟢','🔵','🟣','🏠','💼','🎯','🔧','📊','🎙️','🌱','🚀','💎','🎬','🌍']
 var COLORS_F = ['#CC0000','#1a6fc4','#1a8f5c','#9b3ccf','#d97616','#0891b2','#374151','#b45309']
@@ -215,6 +216,7 @@ export default function App() {
   if (page === 'admin' && profile && profile.role === 'admin') return React.createElement(AdminPage, { onBack: function() { setPage('home') }, currentUser: currentUser, profile: profile })
   if (page === 'tools') return React.createElement(ToolsPage, { onBack: function() { setPage('home') } })
   if (page === 'ideas') return React.createElement(IdeasPage, { onBack: function() { setPage('home') } })
+  if (page === 'stickies') return React.createElement(StickyNotes, { onBack: function() { setPage('home') } })
   if (openFolder) {
     var folderTiles = tiles.filter(function(t) { return t.folder_id === openFolder.id }).sort(function(a, b) { return (a.position || 0) - (b.position || 0) })
     return React.createElement(FolderPage, {
@@ -334,6 +336,7 @@ export default function App() {
             dragging: dragging, dragOver: dragOver,
             onDragStart: handleDragStart, onDragOver: handleDragOver,
             onDrop: handleDrop, onDragEnd: handleDragEnd,
+            onOpenStickies: function() { setPage('stickies') },
           })
     ),
 
