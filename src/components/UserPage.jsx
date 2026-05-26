@@ -336,18 +336,21 @@ export default function UserPage(props) {
       ),
 
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '8px 0 12px', flexWrap: 'wrap' } },
-       weather ? React.createElement('div', {
-          onClick: function() { setFrHover(function(v) { return !v }) },
-          style: { display: 'flex', alignItems: 'center', gap: 6, background: frHover ? '#1a1a00' : '#141414', border: '1px solid ' + (frHover ? '#b4530966' : '#222'), borderRadius: 8, padding: '5px 12px', cursor: 'pointer', position: 'relative' }
+      weather ? React.createElement('div', {
+          style: { display: 'flex', alignItems: 'center', gap: 6, background: '#141414', border: '1px solid #222', borderRadius: 8, padding: '5px 12px' }
         },
           React.createElement('span', { style: { fontSize: 16 } }, WEATHER_ICONS[weather.code] || '🌡️'),
-          React.createElement('span', { style: { fontSize: 14, fontWeight: 700, color: '#ddd' } }, weather.temp + 'C'),
-          frHover ? React.createElement(WeatherTooltip, { data: weather }) : null
+          React.createElement('span', { style: { fontSize: 14, fontWeight: 700, color: '#ddd' } }, weather.temp + 'C')
         ) : null,
         React.createElement('div', { style: { width: 1, height: 24, background: '#1c1c1c' } }),
-        React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
+        React.createElement('div', {
+          style: { display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', cursor: 'default' },
+          onMouseEnter: function() { setFrHover(true) },
+          onMouseLeave: function() { setFrHover(false) }
+        },
           React.createElement('span', { style: { fontSize: 22, fontWeight: 700, color: '#fff', fontVariantNumeric: 'tabular-nums' } }, clockFr),
-          React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'France')
+          React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'France'),
+          frHover && weather ? React.createElement(WeatherTooltip, { data: weather }) : null
         ),
         page.show_clock_cn ? React.createElement('div', { style: { width: 1, height: 24, background: '#1c1c1c' } }) : null,
         page.show_clock_cn ? React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
@@ -356,7 +359,6 @@ export default function UserPage(props) {
         ) : null
       )
     ),
-
     React.createElement('main', { style: { flex: 1, padding: 24 } },
       editMode ? React.createElement('div', { style: { fontSize: 11, color: '#CC000088', letterSpacing: '0.06em', marginBottom: 14, padding: '6px 12px', background: '#1a0000', border: '1px solid #CC000033', borderRadius: 8, display: 'inline-block' } }, '✏️ Mode édition — × pour supprimer · + pour ajouter') : null,
       React.createElement('div', { style: { fontSize: 10, fontWeight: 700, color: '#333', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14 } }, allGrid.length + ' liens'),
