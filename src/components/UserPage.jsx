@@ -4,6 +4,7 @@ import { supabase } from '../supabase'
 import Tile from './Tile'
 import IdeasPage from './IdeasPage'
 import { MemberStickyWidget } from './StickyNotes'
+import CantonWeatherTooltip from './CantonWeatherTooltip'
 
 function getInitials(name) {
   if (!name) return '?'
@@ -176,6 +177,7 @@ export default function UserPage(props) {
   var clockFrS = useState(''); var clockFr = clockFrS[0]; var setClockFr = clockFrS[1]
   var clockCnS = useState(''); var clockCn = clockCnS[0]; var setClockCn = clockCnS[1]
   var frHoverS = useState(false); var frHover = frHoverS[0]; var setFrHover = frHoverS[1]
+  var cnHoverS = useState(false); var cnHover = cnHoverS[0]; var setCnHover = cnHoverS[1]
   var weather = useWeather()
 
   useEffect(function() {
@@ -352,10 +354,15 @@ export default function UserPage(props) {
           React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'France'),
           frHover && weather ? React.createElement(WeatherTooltip, { data: weather }) : null
         ),
-        page.show_clock_cn ? React.createElement('div', { style: { width: 1, height: 24, background: '#1c1c1c' } }) : null,
-        page.show_clock_cn ? React.createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
+    page.show_clock_cn ? React.createElement('div', { style: { width: 1, height: 24, background: '#1c1c1c' } }) : null,
+        page.show_clock_cn ? React.createElement('div', {
+          style: { display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', cursor: 'default' },
+          onMouseEnter: function() { setCnHover(true) },
+          onMouseLeave: function() { setCnHover(false) }
+        },
           React.createElement('span', { style: { fontSize: 22, fontWeight: 700, color: '#cc4400', fontVariantNumeric: 'tabular-nums' } }, clockCn),
-          React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'Canton')
+          React.createElement('span', { style: { fontSize: 9, color: '#444', textTransform: 'uppercase', letterSpacing: '0.08em' } }, 'Canton'),
+          cnHover ? React.createElement(CantonWeatherTooltip, null) : null
         ) : null
       )
     ),
