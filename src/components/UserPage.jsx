@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabase'
 import Tile from './Tile'
 import IdeasPage from './IdeasPage'
+import { MemberStickyWidget } from './StickyNotes'
 
 function getInitials(name) {
   if (!name) return '?'
@@ -329,6 +330,7 @@ if (showIdeas) return React.createElement(IdeasPage, { onBack: function() { setS
   folders.forEach(function(f) { allGrid.push({ tile: f, type: 'folder' }) })
   if (page.show_tools) allGrid.push({ tile: { id: '__tools__', name: 'Outils', icon: '🛠️', color: '#CC0000' }, type: 'tools' })
   if (page.show_ideas) allGrid.push({ tile: { id: '__ideas__', name: 'Boite à idées', icon: '💡', color: '#b45309' }, type: 'ideas' })
+  allGrid.push({ tile: { id: '__stickies__', name: 'Notes', icon: '🗒️', color: '#b45309' }, type: 'stickies' })
 
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#080808' } },
 
