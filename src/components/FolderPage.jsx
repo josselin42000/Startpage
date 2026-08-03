@@ -13,6 +13,9 @@ export default function FolderPage(props) {
   var onAddTile = props.onAddTile
   var onReorder = props.onReorder
   var onRemoveFromFolder = props.onRemoveFromFolder
+  var isAdmin = props.isAdmin
+  var ownerId = props.ownerId
+  function isLocked(t) { return !isAdmin && t.owner_id !== ownerId }
 
   var draggingState = useState(null); var dragging = draggingState[0]; var setDragging = draggingState[1]
   var dragOverState = useState(null); var dragOver = dragOverState[0]; var setDragOver = dragOverState[1]
@@ -38,14 +41,15 @@ export default function FolderPage(props) {
       tiles.length === 0 ? React.createElement('div', { style: { textAlign: 'center', paddingTop: 60, color: '#333', fontSize: 13 } }, 'Dossier vide') : null,
       React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 14 } },
         tiles.map(function(t, i) {
+          var locked = isLocked(t)
           return React.createElement('div', { key: t.id, style: { position: 'relative' } },
-            editMode ? React.createElement('button', {
+            editMode && !locked ? React.createElement('button', {
               onClick: function() { onRemoveFromFolder && onRemoveFromFolder(t.id) },
               title: 'Retirer du dossier',
               style: { position: 'absolute', top: -8, right: -8, width: 22, height: 22, background: '#374151', border: '2px solid #080808', borderRadius: '50%', color: '#ddd', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, zIndex: 11 }
             }, '↗') : null,
             React.createElement(Tile, {
-              tile: t, editMode: editMode, index: i,
+              tile: t, editMode: editMode, index: i, locked: locked,
               dragging: dragging, dragOver: dragOver,
               onEdit: onEdit, onDelete: onDelete,
               onLongPressActivate: onLongPressActivate,
