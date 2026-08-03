@@ -269,7 +269,12 @@ export default function App() {
             profile && profile.role === 'admin' ? React.createElement('button', {
               onClick: function() { setPage('admin') },
               style: { padding: '4px 10px', background: 'transparent', border: '1px solid #CC000044', borderRadius: 6, color: '#CC0000', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' }
-            }, '⚙️') : null
+            }, '⚙️') : null,
+            React.createElement('button', {
+              onClick: function() { supabase.auth.signOut().then(function() { setCurrentUser(null); setProfile(null) }) },
+              title: 'Se deconnecter',
+              style: { padding: '4px 10px', background: 'transparent', border: '1px solid #2a2a2a', borderRadius: 6, color: '#888', fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' }
+            }, '🚪')
           ) : null,
           React.createElement('button', {
             onClick: function() { setEditMode(function(v) { return !v }) },
