@@ -14,6 +14,7 @@ export default function Tile(props) {
   var index = props.index
   var dragging = props.dragging
   var dragOver = props.dragOver
+  var locked = !!props.locked
 
   var iframeState = useState(false); var showIframe = iframeState[0]; var setShowIframe = iframeState[1]
   var timer = useRef(null)
@@ -34,6 +35,7 @@ export default function Tile(props) {
 
   function onClick(e) {
     if (longPressed.current) { e.preventDefault(); return }
+    if (editMode && locked) { e.preventDefault(); return }
     if (editMode) { e.preventDefault(); props.onEdit && props.onEdit(tile); return }
     var mode = tile.openMode || tile.open_mode || 'tab'
     if (mode === 'iframe') { e.preventDefault(); setShowIframe(true); return }
@@ -43,14 +45,14 @@ export default function Tile(props) {
   var isDragging = dragging === tile.id
   var isOver = dragOver === tile.id
   var isEmoji = tile.icon && tile.icon.charCodeAt(0) > 127
-  var anim = editMode && !isDragging ? ('wobble 0.5s ease ' + String((index % 5) * 70) + 'ms infinite alternate') : 'none'
+  var anim = editMode && !isDragging && !locked ? ('wobble 0.5s ease ' + String((index % 5) * 70) + 'ms infinite alternate') : 'none'
   var mode = tile.openMode || tile.open_mode || 'tab'
 
   var linkProps = {
     rel: 'noopener noreferrer', onClick: onClick,
     onMouseDown: onPressStart, onMouseUp: onPressEnd, onMouseLeave: onPressEnd,
     onTouchStart: onPressStart, onTouchEnd: onPressEnd, onTouchMove: onPressEnd,
-    draggable: editMode,
+    draggable: editMode && !locked,
     onDragStart: function(e) { props.onDragStart && props.onDragStart(e, tile.id) },
     onDragOver: function(e) { props.onDragOver && props.onDragOver(e, tile.id) },
     onDrop: function(e) { props.onDrop && props.onDrop(e, tile.id) },
@@ -58,9 +60,9 @@ export default function Tile(props) {
     style: {
       background: isOver ? '#1e2a1e' : tile.fav ? '#1a1500' : '#1a1a1a',
       border: isOver ? '1px solid #1a8f5c' : tile.fav ? '1px solid #b4530944' : editMode ? '1px solid rgba(204,0,0,0.3)' : '1px solid #282828',
-      borderRadius: 12, padding: '16px 10px 12px', cursor: editMode ? 'grab' : 'pointer',
+      borderRadius: 12, padding: '16px 10px 12px', cursor: editMode ? (locked ? 'not-allowed' : 'grab') : 'pointer',
       textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-      textDecoration: 'none', position: 'relative', opacity: isDragging ? 0.4 : 1,
+      textDecoration: 'none', position: 'relative', opacity: isDragging ? 0.4 : (editMode && locked ? 0.55 : 1),
       userSelect: 'none', WebkitUserSelect: 'none', animation: anim,
     }
   }
@@ -83,10 +85,14 @@ export default function Tile(props) {
 
   return React.createElement('a', linkProps,
     tile.fav ? React.createElement('span', { style: { position: 'absolute', top: 5, right: 5, fontSize: 10 } }, '⭐') : null,
-    editMode ? React.createElement('button', {
+    editMode && !locked ? React.createElement('button', {
       onClick: function(e) { e.preventDefault(); e.stopPropagation(); props.onDelete && props.onDelete(tile.id) },
       style: { position: 'absolute', top: -8, left: -8, width: 22, height: 22, background: '#CC0000', border: '2px solid #0d0d0d', borderRadius: '50%', color: '#fff', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, zIndex: 10 }
     }, 'x') : null,
+    editMode && locked ? React.createElement('span', {
+      title: 'Gérée par l\'admin',
+      style: { position: 'absolute', top: -8, left: -8, width: 22, height: 22, background: '#1a1a1a', border: '2px solid #0d0d0d', borderRadius: '50%', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }
+    }, '🔒') : null,
     React.createElement('div', { style: { width: 50, height: 50, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid rgba(128,128,128,0.2)', background: 'rgba(128,128,128,0.1)' } },
       tile.logo
         ? React.createElement('img', { src: tile.logo, alt: tile.name, style: { width: '100%', height: '100%', objectFit: 'contain', padding: 5 } })
