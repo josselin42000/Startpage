@@ -48,15 +48,16 @@ export async function loadTiles() {
   return lsLoad()
 }
 
-export async function addTile(tile, currentTiles) {
+export async function addTile(tile, currentTiles, ownerId) {
   var maxPos = currentTiles.length ? Math.max.apply(null, currentTiles.map(function(t) { return t.position || 0 })) : 0
   if (hasSupabase) {
-    var dbTile = toDb(Object.assign({}, tile, { position: maxPos + 1 }))
+    var dbTile = toDb(Object.assign({}, tile, { position: maxPos + 1, owner_id: ownerId || null }))
     delete dbTile.id
     var res = await supabase.from('tiles').insert([dbTile]).select()
     if (!res.error && res.data) return fromDb(res.data[0])
+    if (res.error) { console.error('addTile error:', res.error.message); return null }
   }
-  var newTile = Object.assign({}, tile, { id: String(Date.now()), position: maxPos + 1 })
+  var newTile = Object.assign({}, tile, { id: String(Date.now()), position: maxPos + 1, owner_id: ownerId || null })
   lsSave(currentTiles.concat([newTile]))
   return newTile
 }
@@ -65,8 +66,10 @@ export async function updateTile(id, tile, currentTiles) {
   if (hasSupabase) {
     var dbTile = toDb(Object.assign({}, tile))
     delete dbTile.id
+    delete dbTile.owner_id // l'appartenance d'une tuile ne se modifie jamais depuis le front
     var res = await supabase.from('tiles').update(dbTile).eq('id', id).select()
     if (!res.error && res.data) return fromDb(res.data[0])
+    if (res.error) { console.error('updateTile error:', res.error.message); return null }
   }
   var updated = (currentTiles || []).map(function(t) { return t.id === id ? Object.assign({}, t, tile) : t })
   lsSave(updated)
@@ -74,7 +77,10 @@ export async function updateTile(id, tile, currentTiles) {
 }
 
 export async function deleteTile(id, currentTiles) {
-  if (hasSupabase) { await supabase.from('tiles').delete().eq('id', id) }
+  if (hasSupabase) {
+    var res = await supabase.from('tiles').delete().eq('id', id)
+    if (res.error) { console.error('deleteTile error:', res.error.message) }
+  }
   var updated = (currentTiles || []).filter(function(t) { return t.id !== id })
   lsSave(updated)
   return updated
