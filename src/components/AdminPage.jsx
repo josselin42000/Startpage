@@ -165,6 +165,11 @@ export default function AdminPage(props) {
   var tabS = useState('pages'); var tab = tabS[0]; var setTab = tabS[1]
   var formOpenS = useState(false); var formOpen = formOpenS[0]; var setFormOpen = formOpenS[1]
   var editingPageS = useState(null); var editingPage = editingPageS[0]; var setEditingPage = editingPageS[1]
+  var pwUserS = useState(null); var pwUser = pwUserS[0]; var setPwUser = pwUserS[1]
+  var pwValueS = useState(''); var pwValue = pwValueS[0]; var setPwValue = pwValueS[1]
+  var pwErrS = useState(''); var pwErr = pwErrS[0]; var setPwErr = pwErrS[1]
+  var pwLoadS = useState(false); var pwLoad = pwLoadS[0]; var setPwLoad = pwLoadS[1]
+  var pwDoneS = useState(false); var pwDone = pwDoneS[0]; var setPwDone = pwDoneS[1]
 
   useEffect(function() { loadAll() }, [])
 
@@ -202,6 +207,18 @@ export default function AdminPage(props) {
   function changeRole(userId, newRole) {
     supabase.from('profiles').update({ role: newRole }).eq('id', userId).then(function(res) {
       if (!res.error) setUsers(users.map(function(u) { return u.id === userId ? Object.assign({}, u, { role: newRole }) : u }))
+    })
+  }
+
+  function submitPasswordReset() {
+    if (!pwValue || pwValue.length < 6) { setPwErr('6 caractères minimum'); return }
+    setPwLoad(true); setPwErr('')
+    supabase.functions.invoke('admin-reset-password', { body: { user_id: pwUser.id, new_password: pwValue } }).then(function(res) {
+      setPwLoad(false)
+      var errMsg = res.error ? res.error.message : (res.data && res.data.error)
+      if (errMsg) { setPwErr(errMsg); return }
+      setPwDone(true)
+      setTimeout(function() { setPwUser(null); setPwValue(''); setPwDone(false) }, 1200)
     })
   }
 
@@ -273,12 +290,49 @@ export default function AdminPage(props) {
             },
               React.createElement('option', { value: 'user' }, 'Utilisateur'),
               React.createElement('option', { value: 'admin' }, 'Admin')
-            )
+            ),
+            React.createElement('button', {
+              onClick: function() { setPwUser(u); setPwValue(''); setPwErr(''); setPwDone(false) },
+              title: 'Changer le mot de passe',
+              style: { padding: '8px 10px', background: 'transparent', border: '1px solid #2a2a2a', borderRadius: 6, color: '#888', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }
+            }, '🔑')
           )
         })
       )
     ),
 
-    formOpen ? React.createElement(UserPageForm, { page: editingPage, allTiles: allTiles, onSave: handleSavePage, onClose: function() { setFormOpen(false); setEditingPage(null) } }) : null
+    formOpen ? React.createElement(UserPageForm, { page: editingPage, allTiles: allTiles, onSave: handleSavePage, onClose: function() { setFormOpen(false); setEditingPage(null) } }) : null,
+
+    pwUser ? React.createElement('div', {
+      onClick: function(e) { if (e.target === e.currentTarget && !pwLoad) setPwUser(null) },
+      style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }
+    },
+      React.createElement('div', { style: { background: '#111', border: '1px solid #252525', borderRadius: 16, padding: 24, width: '100%', maxWidth: 360 } },
+        React.createElement('h2', { style: { fontSize: 13, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 } }, '🔑 Nouveau mot de passe'),
+        React.createElement('div', { style: { fontSize: 11, color: '#555', marginBottom: 16 } }, pwUser.email || pwUser.id),
+        pwDone
+          ? React.createElement('div', { style: { fontSize: 12, color: '#1a8f5c', padding: '10px 0' } }, '✅ Mot de passe mis à jour')
+          : React.createElement(React.Fragment, null,
+              React.createElement('input', {
+                type: 'password', value: pwValue, autoFocus: true,
+                onChange: function(e) { setPwValue(e.target.value) },
+                onKeyDown: function(e) { if (e.key === 'Enter') submitPasswordReset() },
+                placeholder: 'Nouveau mot de passe (6 caractères min)',
+                style: Object.assign({}, inp, { width: '100%', marginBottom: 10, boxSizing: 'border-box' })
+              }),
+              pwErr ? React.createElement('div', { style: { fontSize: 12, color: '#CC0000', marginBottom: 10 } }, pwErr) : null,
+              React.createElement('div', { style: { display: 'flex', gap: 10 } },
+                React.createElement('button', {
+                  onClick: function() { setPwUser(null) }, disabled: pwLoad,
+                  style: { flex: 1, padding: 10, background: 'transparent', border: '1px solid #252525', borderRadius: 8, color: '#555', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'uppercase' }
+                }, 'Annuler'),
+                React.createElement('button', {
+                  onClick: submitPasswordReset, disabled: pwLoad,
+                  style: { flex: 2, padding: 10, background: '#CC0000', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 700, cursor: pwLoad ? 'wait' : 'pointer', fontFamily: 'inherit', textTransform: 'uppercase', opacity: pwLoad ? 0.7 : 1 }
+                }, pwLoad ? 'Envoi...' : 'Valider')
+              )
+            )
+      )
+    ) : null
   )
 }
