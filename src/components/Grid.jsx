@@ -7,6 +7,14 @@ export default function Grid(props) {
   var tiles = props.tiles
   var allTiles = props.allTiles
   var editMode = props.editMode
+  var isAdmin = props.isAdmin
+  var ownerId = props.ownerId
+
+  // Verrouillée = tuile générale (owner_id null) ou tuile d'un autre utilisateur, pour un non-admin
+  function isLocked(t) {
+    if (isAdmin) return false
+    return t.owner_id !== ownerId
+  }
   var onAdd = props.onAdd
   var onAddFolder = props.onAddFolder
   var onEdit = props.onEdit
@@ -32,7 +40,7 @@ export default function Grid(props) {
     if (t.type === 'folder') {
       var children = (allTiles || []).filter(function(x) { return x.folder_id === t.id })
       return React.createElement(FolderTile, {
-        key: t.id, tile: t, editMode: editMode, index: i,
+        key: t.id, tile: t, editMode: editMode, index: i, locked: isLocked(t),
         childTiles: children, dragging: dragging, dragOver: dragOver,
         onEdit: onEdit, onDelete: onDelete,
         onLongPressActivate: onLongPressActivate,
@@ -41,7 +49,7 @@ export default function Grid(props) {
       })
     }
     return React.createElement(Tile, {
-      key: t.id, tile: t, editMode: editMode, index: i,
+      key: t.id, tile: t, editMode: editMode, index: i, locked: isLocked(t),
       dragging: dragging, dragOver: dragOver,
       onEdit: onEdit, onDelete: onDelete,
       onLongPressActivate: onLongPressActivate,
