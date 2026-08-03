@@ -10,6 +10,7 @@ export default function FolderTile(props) {
   var dragging = props.dragging
   var dragOver = props.dragOver
   var childTiles = props.childTiles || []
+  var locked = !!props.locked
 
   var timer = useRef(null)
   var longPressed = useRef(false)
@@ -29,6 +30,7 @@ export default function FolderTile(props) {
   function onClick(e) {
     e.preventDefault()
     if (longPressed.current) return
+    if (editMode && locked) return
     if (editMode) { props.onEdit && props.onEdit(tile); return }
     props.onOpen && props.onOpen(tile)
   }
@@ -37,12 +39,12 @@ export default function FolderTile(props) {
   var isOver = dragOver === tile.id
   var color = tile.color || '#CC0000'
   var previews = childTiles.slice(0, 4)
-  var anim = editMode && !isDragging ? ('wobble2 0.5s ease ' + String((index % 5) * 70) + 'ms infinite alternate') : 'none'
+  var anim = editMode && !isDragging && !locked ? ('wobble2 0.5s ease ' + String((index % 5) * 70) + 'ms infinite alternate') : 'none'
 
   return React.createElement('div', {
     onClick: onClick,
     onMouseDown: onPressStart, onMouseUp: onPressEnd,
-    draggable: editMode,
+    draggable: editMode && !locked,
     onDragStart: function(e) { props.onDragStart && props.onDragStart(e, tile.id) },
     onDragOver: function(e) { props.onDragOver && props.onDragOver(e, tile.id) },
     onDrop: function(e) { props.onDrop && props.onDrop(e, tile.id) },
@@ -50,16 +52,20 @@ export default function FolderTile(props) {
     style: {
       background: isOver ? (color + '22') : '#1a1a1a',
       border: isOver ? ('2px solid ' + color) : editMode ? '1px solid rgba(204,0,0,0.3)' : ('1px solid ' + color + '33'),
-      borderRadius: 14, padding: '16px 14px 14px', cursor: editMode ? 'grab' : 'pointer',
+      borderRadius: 14, padding: '16px 14px 14px', cursor: editMode ? (locked ? 'not-allowed' : 'grab') : 'pointer',
       textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-      position: 'relative', opacity: isDragging ? 0.4 : 1,
+      position: 'relative', opacity: isDragging ? 0.4 : (editMode && locked ? 0.55 : 1),
       userSelect: 'none', WebkitUserSelect: 'none', animation: anim,
     }
   },
-    editMode ? React.createElement('button', {
+    editMode && !locked ? React.createElement('button', {
       onClick: function(e) { e.preventDefault(); e.stopPropagation(); props.onDelete && props.onDelete(tile.id) },
       style: { position: 'absolute', top: -8, left: -8, width: 24, height: 24, background: '#CC0000', border: '2px solid #0d0d0d', borderRadius: '50%', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, zIndex: 10 }
     }, 'x') : null,
+    editMode && locked ? React.createElement('span', {
+      title: 'Gérée par l\'admin',
+      style: { position: 'absolute', top: -8, left: -8, width: 24, height: 24, background: '#1a1a1a', border: '2px solid #0d0d0d', borderRadius: '50%', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }
+    }, '🔒') : null,
     React.createElement('div', { style: { width: 64, height: 64, borderRadius: 16, background: color + '18', border: '1px solid ' + color + '44', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 } },
       previews.length > 0
         ? React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, padding: 6, width: '100%', height: '100%' } },
