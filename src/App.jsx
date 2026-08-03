@@ -87,6 +87,10 @@ export default function App() {
 
   var clock = useClock()
 
+  // Si Supabase n'est pas configuré (mode local/dev), tout le monde se comporte comme admin
+  var isAdmin = !hasSupabase || (profile && profile.role === 'admin')
+  var ownerId = currentUser ? currentUser.id : null
+
   var fetchTiles = useCallback(function() {
     setLoading(true)
     loadTiles().then(function(data) { setTiles(data); setLoading(false) }).catch(function(e) { console.error(e); setLoading(false) })
@@ -95,7 +99,7 @@ export default function App() {
 
   function handleAdd(tile) {
     var extra = openFolder ? { folder_id: openFolder.id } : {}
-    addTile(Object.assign({}, tile, extra), tiles).then(function(newTile) {
+    addTile(Object.assign({}, tile, extra), tiles, isAdmin ? null : ownerId).then(function(newTile) {
       if (newTile) setTiles(function(prev) { return prev.concat([newTile]) })
       setModalOpen(false)
     })
@@ -178,7 +182,7 @@ export default function App() {
   }
   function handleCreateFolder() {
     if (!folderForm.name.trim()) return
-    addTile({ name: folderForm.name.trim(), icon: folderForm.icon, color: folderForm.color, type: 'folder', url: '#', cat: '', logo: '', folder_id: null }, tiles).then(function(newTile) {
+    addTile({ name: folderForm.name.trim(), icon: folderForm.icon, color: folderForm.color, type: 'folder', url: '#', cat: '', logo: '', folder_id: null }, tiles, isAdmin ? null : ownerId).then(function(newTile) {
       if (newTile) setTiles(function(prev) { return prev.concat([newTile]) })
       setFolderModalOpen(false)
       setFolderForm({ name: '', icon: '📁', color: '#CC0000' })
@@ -220,6 +224,7 @@ export default function App() {
       folder: openFolder, tiles: folderTiles,
       onBack: function() { setOpenFolder(null) },
       editMode: editMode,
+      isAdmin: isAdmin, ownerId: ownerId,
       onEdit: function(t) { setEditingTile(t); setModalOpen(true) },
       onDelete: handleDelete,
       onLongPressActivate: function() { setEditMode(true) },
@@ -312,10 +317,12 @@ export default function App() {
     }),
 
     React.createElement('main', { style: { flex: 1, padding: '20px 16px' } },
+      editMode && !isAdmin ? React.createElement('div', { style: { fontSize: 11, color: '#888', letterSpacing: '0.04em', marginBottom: 14, padding: '6px 12px', background: '#141414', border: '1px solid #252525', borderRadius: 8, display: 'inline-block' } }, '🔒 les tuiles générales (admin) ne sont pas modifiables ici · vos tuiles perso le sont') : null,
       loading
         ? React.createElement('div', { style: { textAlign: 'center', paddingTop: 80, color: '#444', fontSize: 13 } }, 'Chargement...')
         : React.createElement(Grid, {
             tiles: shown, allTiles: tiles, editMode: editMode,
+            isAdmin: isAdmin, ownerId: ownerId,
             onAdd: function() { setEditingTile(null); setModalOpen(true) },
             onAddFolder: function() { setFolderModalOpen(true) },
             onEdit: function(t) { setEditingTile(t); setModalOpen(true) },
